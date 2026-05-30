@@ -1097,3 +1097,46 @@ async function sendData(action, data, loadingId) {
         return false; 
     }
 }
+
+
+// ============================================================================
+// ADMIN PANEL: GERENCIAMENTO DE USUÁRIOS
+// ============================================================================
+
+async function carregarListaUsuarios() {
+    try {
+        const tbody = document.getElementById('tabela-usuarios-body');
+        if(!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">Carregando usuários...</td></tr>';
+        
+        const q = window.query(window.collection(window.db, 'usuarios'));
+        const querySnapshot = await window.getDocs(q);
+        
+        let usuarios = [];
+        querySnapshot.forEach(doc => {
+            usuarios.push({ id: doc.id, ...doc.data() });
+        });
+        
+        if (typeof renderizarUsuarios === 'function') {
+            renderizarUsuarios(usuarios);
+        }
+    } catch (e) {
+        console.error('Erro ao buscar usuários:', e);
+        alert('Erro ao buscar usuários.');
+    }
+}
+
+async function alterarCargoUsuario(uid, novoCargo) {
+    try {
+        await window.updateDoc(window.doc(window.db, 'usuarios', uid), {
+            perfil: novoCargo
+        });
+        carregarListaUsuarios();
+    } catch(e) {
+        console.error('Erro ao alterar cargo:', e);
+        alert('Erro ao alterar cargo do usuário.');
+    }
+}
+
+window.carregarListaUsuarios = carregarListaUsuarios;
+window.alterarCargoUsuario = alterarCargoUsuario;

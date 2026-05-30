@@ -167,6 +167,12 @@ function aplicarPermissoes() {
         else navImport.classList.add('hidden');
     }
 
+    const navAdmin = document.getElementById('nav-admin');
+    if(navAdmin) {
+        if(currentUserRole === 'ADMIN') navAdmin.classList.remove('hidden');
+        else navAdmin.classList.add('hidden');
+    }
+
     const botoesAcao = document.querySelectorAll('.btn-action, .btn-delete');
     botoesAcao.forEach(btn => {
         if(isVisitor) btn.classList.add('hidden');
@@ -180,7 +186,7 @@ function aplicarPermissoes() {
     const inputs = document.querySelectorAll('input, select, textarea');
     inputs.forEach(inp => {
         const id = inp.id || '';
-        const isFilter = id.includes('filtro') || id.includes('busca') || id.includes('dash-filter') || id.includes('rel-filter') || id.includes('parc-filter');
+        const isFilter = id.includes('filtro') || id.includes('busca') || id.includes('dash-filter') || id.includes('rel-filter') || id.includes('parc-filter') || id.includes('listagem-tipo');
         
         if(!isFilter) {
             if(isVisitor) inp.setAttribute('disabled', 'true');
@@ -233,7 +239,8 @@ function switchTab(tabId, shouldReset = true) {
         'view-form-paciente', 'view-form-atendimento', 
         'view-dashboard', 'view-relatorios', 'view-listagens',
         'view-parceiros', 'view-historico-paciente', 
-        'view-detalhe-atendimento', 'view-importacao'
+        'view-detalhe-atendimento', 'view-importacao',
+        'view-admin-panel'
     ];
     
     views.forEach(id => {
@@ -260,6 +267,7 @@ function switchTab(tabId, shouldReset = true) {
     if (tabId === 'dashboard' && typeof loadDashboard === 'function') loadDashboard();
     if (tabId === 'parceiros' && typeof initParceiros === 'function') initParceiros();
     if (tabId === 'relatorios' && typeof initRelatorios === 'function') initRelatorios();
+    if (tabId === 'admin-panel' && typeof carregarListaUsuarios === 'function') carregarListaUsuarios();
 
     if(currentUserRole) aplicarPermissoes();
 }
@@ -923,10 +931,16 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
         fields.forEach(k => { const el = document.getElementById(`field_${k}`); if(el) el.value = dados[k] || ''; });
         
         ['municipio','bairro','status_titulo', 'indicacao'].forEach(k => { 
-            preencherSelectInteligente(k, dados[k]); 
+            let val = dados[k];
+            if (k === 'municipio') val = val || dados.cidade || dados.Municipio || dados.Cidade;
+            if (k === 'bairro') val = val || dados.Bairro;
+            if (k === 'status_titulo') val = val || dados.situacao_eleitoral || dados.situacaoEleitoral || dados.municipio_titulo;
+            if (k === 'indicacao') val = val || dados.quem_indicou || dados.QuemIndicou;
+            preencherSelectInteligente(k, val); 
         });
         
         const elTitulo = document.getElementById('field_titulo'); if(elTitulo) elTitulo.value = dados.titulo || '';
+        const elLogra = document.getElementById('field_logradouro'); if(elLogra) elLogra.value = dados.logradouro || dados.endereco || dados.Endereco || dados.Logradouro || ''; 
     }
 }
 
@@ -1709,18 +1723,39 @@ async function verHistoricoCompleto(p) {
         pacienteAtual = p; 
         histPacienteAtual = p;
 
-        const dataCriacao = p.data_criacao ? p.data_criacao : 'N/I';
+        let dataCriacao = p.data_criacao || p.dataCriacao || p.DataCriacao || p.Data_criacao || 'N/I';
+        if (dataCriacao && dataCriacao.includes('T')) {
+            try {
+                const d = new Date(dataCriacao);
+                if (!isNaN(d.getTime())) {
+                    const dia = String(d.getDate()).padStart(2, '0');
+                    const mes = String(d.getMonth() + 1).padStart(2, '0');
+                    const ano = d.getFullYear();
+                    const hor = String(d.getHours()).padStart(2, '0');
+                    const min = String(d.getMinutes()).padStart(2, '0');
+                    dataCriacao = `${dia}/${mes}/${ano} ${hor}:${min}`;
+                }
+            } catch(e) {}
+        } else if (dataCriacao && dataCriacao.length === 10 && dataCriacao.includes('-')) {
+            const parts = dataCriacao.split('-');
+            if(parts.length === 3 && parts[0].length === 4) dataCriacao = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        
+        const municipio = p.municipio || p.cidade || p.Municipio || p.Cidade || '-';
+        const bairro = p.bairro || p.Bairro || '-';
+        const logradouro = p.logradouro || p.endereco || p.Endereco || p.Logradouro || '-';
+        const situacao = p.status_titulo || p.situacao_eleitoral || p.situacaoEleitoral || p.municipio_titulo || '-';
 
         divDetalhes.innerHTML = `
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Cadastrado em</span> <span class="font-medium text-slate-800 text-xs">${dataCriacao}</span></div>
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Nasc.</span> <span class="font-medium text-slate-800">${p.nascimento ? p.nascimento.split('-').reverse().join('/') : '-'}</span></div>
             <div><span class="block text-xs font-bold text-slate-400 uppercase">RG</span> <span class="font-medium text-slate-800">${p.rg || '-'}</span></div>
             
-            <div><span class="block text-xs font-bold text-slate-400 uppercase">Município</span> <span class="font-medium text-slate-800">${p.municipio || '-'}</span></div>
-            <div><span class="block text-xs font-bold text-slate-400 uppercase">Bairro</span> <span class="font-medium text-slate-800">${p.bairro || '-'}</span></div>
-            <div class="md:col-span-2"><span class="block text-xs font-bold text-slate-400 uppercase">Endereço</span> <span class="font-medium text-slate-800">${p.logradouro || '-'}</span></div>
+            <div><span class="block text-xs font-bold text-slate-400 uppercase">Município</span> <span class="font-medium text-slate-800">${municipio}</span></div>
+            <div><span class="block text-xs font-bold text-slate-400 uppercase">Bairro</span> <span class="font-medium text-slate-800">${bairro}</span></div>
+            <div class="md:col-span-2"><span class="block text-xs font-bold text-slate-400 uppercase">Endereço</span> <span class="font-medium text-slate-800">${logradouro}</span></div>
             
-            <div><span class="block text-xs font-bold text-slate-400 uppercase">Situação Eleitoral</span> <span class="font-medium text-slate-800">${p.status_titulo || '-'}</span></div>
+            <div><span class="block text-xs font-bold text-slate-400 uppercase">Situação Eleitoral</span> <span class="font-medium text-slate-800">${situacao}</span></div>
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Zona/Seção</span> <span class="font-medium text-slate-800">${p.zona || '-'}/${p.secao || '-'}</span></div>
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Família</span> <span class="font-medium text-slate-800">${p.familia || '-'}</span></div>
             
@@ -1824,14 +1859,32 @@ async function verHistoricoCompleto(p) {
 // X. LISTAGENS PARA IMPRESSÃƒO
 // ============================================================================
 
-function mudarFiltroListagem() {
+async function mudarFiltroListagem() {
+    if (!window.todosPacientes || window.todosPacientes.length === 0) {
+        if (typeof carregarListaPacientes === 'function') await carregarListaPacientes();
+    }
+    if (!window.todosAtendimentos || window.todosAtendimentos.length === 0) {
+        if (typeof carregarListaAtendimentos === 'function') await carregarListaAtendimentos();
+    }
+
     const tipo = document.getElementById('listagem-tipo').value;
     const lblFiltro = document.getElementById('lbl-filtro-secundario');
     const selMes = document.getElementById('inp-filtro-secundario-mes');
     const txtBusca = document.getElementById('inp-filtro-secundario-texto');
+    const datalist = document.getElementById('listagens-datalist');
+
+    if (txtBusca && !txtBusca.dataset.clickBound) {
+        txtBusca.addEventListener('click', function() {
+            if (this.list && typeof this.showPicker === 'function') {
+                try { this.showPicker(); } catch(e) {}
+            }
+        });
+        txtBusca.dataset.clickBound = "true";
+    }
 
     selMes.classList.add('hidden');
     txtBusca.classList.add('hidden');
+    if (datalist) datalist.innerHTML = '';
 
     if (tipo === 'aniversariantes') {
         lblFiltro.innerText = "Selecione o Mês";
@@ -1841,24 +1894,42 @@ function mudarFiltroListagem() {
         txtBusca.classList.remove('hidden');
         txtBusca.disabled = true;
         txtBusca.placeholder = "Todos os pendentes...";
-    } else if (tipo === 'bairros') {
-        lblFiltro.innerText = "Qual Bairro? (Vazio para todos)";
+    } else {
         txtBusca.classList.remove('hidden');
         txtBusca.disabled = false;
         txtBusca.value = "";
-        txtBusca.placeholder = "Ex: Centro";
-    } else if (tipo === 'indicacao') {
-        lblFiltro.innerText = "Qual Indicação? (Vazio para todos)";
-        txtBusca.classList.remove('hidden');
-        txtBusca.disabled = false;
-        txtBusca.value = "";
-        txtBusca.placeholder = "Nome da indicação";
-    } else if (tipo === 'lideranca') {
-        lblFiltro.innerText = "Qual Liderança? (Vazio para todos)";
-        txtBusca.classList.remove('hidden');
-        txtBusca.disabled = false;
-        txtBusca.value = "";
-        txtBusca.placeholder = "Nome do líder";
+        
+        let targetField = '';
+        if (tipo === 'bairros') {
+            lblFiltro.innerText = "Qual Bairro? (Vazio para todos)";
+            txtBusca.placeholder = "Ex: Centro";
+            targetField = 'bairro';
+        } else if (tipo === 'indicacao') {
+            lblFiltro.innerText = "Qual Indicação? (Vazio para todos)";
+            txtBusca.placeholder = "Nome da indicação";
+            targetField = 'indicacao';
+        } else if (tipo === 'lideranca') {
+            lblFiltro.innerText = "Qual Liderança? (Vazio para todos)";
+            txtBusca.placeholder = "Nome do líder";
+            targetField = 'lideranca';
+        }
+        
+        if (targetField && window.todosPacientes && datalist) {
+            let uniqueValues = new Set();
+            let hasEmpty = false;
+            window.todosPacientes.forEach(p => {
+                let v = p[targetField];
+                if (targetField === 'bairro' && !v) v = p['Bairro'];
+                if (v && v.trim() !== '') uniqueValues.add(v.trim().toUpperCase());
+                else hasEmpty = true;
+            });
+            Array.from(uniqueValues).sort().forEach(val => {
+                datalist.innerHTML += `<option value="${val}"></option>`;
+            });
+            if (hasEmpty && targetField === 'bairro') {
+                datalist.innerHTML += `<option value="SEM BAIRRO"></option>`;
+            }
+        }
     }
 }
 
@@ -1883,24 +1954,92 @@ async function gerarListagem() {
     let header = '';
 
     if (tipo === 'aniversariantes') {
-        header = `<tr><th class="px-6 py-4">Munícipe</th><th class="px-6 py-4">Data Nasc.</th><th class="px-6 py-4">Telefone</th><th class="px-6 py-4">Bairro</th></tr>`;
-        const list = todosPacientes.filter(p => {
-            if (!p.nascimento) return false;
-            const parts = p.nascimento.split('-');
-            if (parts.length !== 3) return false;
-            return parts[1] === mes;
-        });
-        list.sort((a,b) => {
-            const dA = a.nascimento.split('-')[2];
-            const dB = b.nascimento.split('-')[2];
-            return dA.localeCompare(dB);
-        });
+        header = `<tr><th class="px-6 py-4">Munícipe</th><th class="px-6 py-4">Data Nasc.</th><th class="px-6 py-4">Telefone</th><th class="px-6 py-4">Bairro</th><th class="px-6 py-4">Indicação</th></tr>`;
+        
+        const hojeDate = new Date();
+        const hojeDia = hojeDate.getDate();
+        const hojeMes = hojeDate.getMonth() + 1;
+        const anoAtual = hojeDate.getFullYear();
 
-        if (list.length === 0) html = `<tr><td colspan="4" class="px-6 py-4 text-center">Nenhum aniversariante encontrado.</td></tr>`;
-        list.forEach(p => {
-            const dataFmt = p.nascimento.split('-').reverse().join('/');
-            html += `<tr><td class="px-6 py-2 font-bold">${p.nome}</td><td class="px-6 py-2">${dataFmt}</td><td class="px-6 py-2">${p.tel || p.tel1 || p.whatsapp || p.telefone || '-'}</td><td class="px-6 py-2">${p.bairro||'-'}</td></tr>`;
-        });
+        if (mes === "") {
+            const mesesNomes = {
+                '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril', '05': 'Maio', '06': 'Junho',
+                '07': 'Julho', '08': 'Agosto', '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+            };
+            
+            for (let m = 1; m <= 12; m++) {
+                const mesStr = m.toString().padStart(2, '0');
+                const list = todosPacientes.filter(p => {
+                    if (!p.nascimento) return false;
+                    const parts = p.nascimento.split('-');
+                    if (parts.length !== 3) return false;
+                    return parts[1] === mesStr;
+                });
+                
+                if (list.length > 0) {
+                    list.sort((a,b) => a.nascimento.split('-')[2].localeCompare(b.nascimento.split('-')[2]));
+                    html += `<tr class="bg-indigo-50"><td colspan="5" class="px-6 py-3 font-bold text-indigo-800 text-center uppercase">${mesesNomes[mesStr]} ${anoAtual} - ${list.length} pessoas fazem aniversário neste mês</td></tr>`;
+                    list.forEach(p => {
+                        const dataFmt = p.nascimento.split('-').reverse().join('/');
+                        const diaAniv = parseInt(p.nascimento.split('-')[2]);
+                        
+                        let statusHtml = '';
+                        let trClass = 'hover:bg-slate-50 transition';
+                        
+                        if (m < hojeMes) { statusHtml = 'Já fez'; trClass = 'bg-slate-50 opacity-75'; }
+                        else if (m > hojeMes) { statusHtml = 'Vai fazer'; }
+                        else {
+                            if (diaAniv < hojeDia) { statusHtml = 'Já fez'; trClass = 'bg-slate-50 opacity-75'; }
+                            else if (diaAniv > hojeDia) { statusHtml = 'Vai fazer'; }
+                            else { statusHtml = 'HOJE! 🥳'; trClass = 'bg-green-100 border-l-4 border-green-500 font-bold'; }
+                        }
+                        
+                        html += `<tr class="${trClass}"><td class="px-6 py-2 font-bold">${p.nome} <span class="text-[10px] uppercase text-slate-500 ml-2 font-bold">${statusHtml}</span></td><td class="px-6 py-2">${dataFmt}</td><td class="px-6 py-2">${p.tel || p.tel1 || p.whatsapp || p.telefone || '-'}</td><td class="px-6 py-2">${p.bairro||'-'}</td><td class="px-6 py-2">${p.indicacao||'-'}</td></tr>`;
+                    });
+                }
+            }
+            if (html === '') html = `<tr><td colspan="5" class="px-6 py-4 text-center">Nenhum aniversariante encontrado.</td></tr>`;
+        } else {
+            const list = todosPacientes.filter(p => {
+                if (!p.nascimento) return false;
+                const parts = p.nascimento.split('-');
+                if (parts.length !== 3) return false;
+                return parts[1] === mes;
+            });
+            list.sort((a,b) => {
+                const dA = a.nascimento.split('-')[2];
+                const dB = b.nascimento.split('-')[2];
+                return dA.localeCompare(dB);
+            });
+
+            if (list.length === 0) html = `<tr><td colspan="5" class="px-6 py-4 text-center">Nenhum aniversariante encontrado.</td></tr>`;
+            else {
+                const mesesNomes = {
+                    '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril', '05': 'Maio', '06': 'Junho',
+                    '07': 'Julho', '08': 'Agosto', '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+                };
+                html += `<tr class="bg-indigo-50"><td colspan="5" class="px-6 py-3 font-bold text-indigo-800 text-center uppercase">${mesesNomes[mes]} ${anoAtual} - ${list.length} pessoas fazem aniversário neste mês</td></tr>`;
+            }
+            
+            list.forEach(p => {
+                const dataFmt = p.nascimento.split('-').reverse().join('/');
+                const diaAniv = parseInt(p.nascimento.split('-')[2]);
+                const mesAniv = parseInt(mes);
+                
+                let statusHtml = '';
+                let trClass = 'hover:bg-slate-50 transition';
+                
+                if (mesAniv < hojeMes) { statusHtml = 'Já fez'; trClass = 'bg-slate-50 opacity-75'; }
+                else if (mesAniv > hojeMes) { statusHtml = 'Vai fazer'; }
+                else {
+                    if (diaAniv < hojeDia) { statusHtml = 'Já fez'; trClass = 'bg-slate-50 opacity-75'; }
+                    else if (diaAniv > hojeDia) { statusHtml = 'Vai fazer'; }
+                    else { statusHtml = 'HOJE! 🥳'; trClass = 'bg-green-100 border-l-4 border-green-500 font-bold'; }
+                }
+
+                html += `<tr class="${trClass}"><td class="px-6 py-2 font-bold">${p.nome} <span class="text-[10px] uppercase text-slate-500 ml-2 font-bold">${statusHtml}</span></td><td class="px-6 py-2">${dataFmt}</td><td class="px-6 py-2">${p.tel || p.tel1 || p.whatsapp || p.telefone || '-'}</td><td class="px-6 py-2">${p.bairro||'-'}</td><td class="px-6 py-2">${p.indicacao||'-'}</td></tr>`;
+            });
+        }
     } 
     else if (tipo === 'pendentes') {
         header = `<tr><th class="px-6 py-4">Munícipe (CPF)</th><th class="px-6 py-4">Procedimento / Local</th><th class="px-6 py-4">Data Risco</th></tr>`;
@@ -1914,16 +2053,42 @@ async function gerarListagem() {
         });
     }
     else if (tipo === 'bairros') {
-        header = `<tr><th class="px-6 py-4">Munícipe</th><th class="px-6 py-4">Bairro</th><th class="px-6 py-4">Telefone</th></tr>`;
+        header = `<tr><th class="px-6 py-4">Munícipe</th><th class="px-6 py-4">Bairro / Endereço</th><th class="px-6 py-4">Telefone</th><th class="px-6 py-4">Atendimentos Consolidado</th></tr>`;
         let list = todosPacientes;
         if (texto) {
-            list = list.filter(p => p.bairro && p.bairro.toUpperCase().includes(texto));
+            if (texto.toUpperCase() === 'SEM BAIRRO') {
+                list = list.filter(p => !p.bairro && !p.Bairro);
+            } else {
+                list = list.filter(p => (p.bairro && p.bairro.toUpperCase().includes(texto.toUpperCase())) || (p.Bairro && p.Bairro.toUpperCase().includes(texto.toUpperCase())));
+            }
         }
-        list.sort((a,b) => (a.bairro||'').localeCompare(b.bairro||'') || (a.nome||'').localeCompare(b.nome||''));
+        list.sort((a,b) => ((a.bairro||a.Bairro||'').localeCompare(b.bairro||b.Bairro||'') || (a.nome||'').localeCompare(b.nome||'')));
 
-        if (list.length === 0) html = `<tr><td colspan="3" class="px-6 py-4 text-center">Nenhum resultado.</td></tr>`;
+        if (list.length === 0) html = `<tr><td colspan="4" class="px-6 py-4 text-center">Nenhum resultado.</td></tr>`;
         list.forEach(p => {
-            html += `<tr><td class="px-6 py-2 font-bold">${p.nome}</td><td class="px-6 py-2">${p.bairro||'-'}</td><td class="px-6 py-2">${p.tel || p.tel1 || p.whatsapp || p.telefone || '-'}</td></tr>`;
+            const end = p.endereco || p.logradouro || p.Endereco || p.Logradouro || '-';
+            const br = p.bairro || p.Bairro || '-';
+            const bairroEnd = br + '<br><span class="text-xs text-slate-400">' + end + '</span>';
+            
+            const atends = (window.todosAtendimentos || []).filter(a => {
+                const hasCpfP = p.cpf && p.cpf.length > 4;
+                const hasCpfA = a.cpf_paciente && a.cpf_paciente.length > 4;
+                if (hasCpfP && hasCpfA && a.cpf_paciente === p.cpf) return true;
+                
+                const hasNomeP = p.nome && p.nome.trim() !== '';
+                const hasNomeA = a.nome_paciente && a.nome_paciente.trim() !== '';
+                if (hasNomeP && hasNomeA && a.nome_paciente.toUpperCase() === p.nome.toUpperCase()) return true;
+                
+                return false;
+            });
+            
+            let cons = atends.map(a => {
+                let s = [a.tipo_servico || a.tipo, a.especialidade, a.procedimento].filter(x=>x).join(' - ');
+                return s ? `<div class="text-xs border-b border-slate-100 pb-1 mb-1 last:border-0 last:pb-0 last:mb-0">${s}</div>` : '';
+            }).filter(x=>x).join('');
+            if(!cons) cons = '-';
+
+            html += `<tr><td class="px-6 py-2 font-bold">${p.nome}</td><td class="px-6 py-2">${bairroEnd}</td><td class="px-6 py-2">${p.tel || p.tel1 || p.whatsapp || p.telefone || '-'}</td><td class="px-6 py-2">${cons}</td></tr>`;
         });
     }
     else if (tipo === 'indicacao') {
@@ -2318,14 +2483,26 @@ function renderRecentLogins() {
                 <div class="flex flex-col gap-2">`;
                 
     recents.forEach(r => {
-        html += `<button onclick="loginDiretoCache('${r.email}', '${r.token}')" type="button" class="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2 rounded-lg transition-all w-full text-left">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold uppercase shrink-0">${r.email.charAt(0)}</div>
-                    <span class="text-sm font-medium truncate">${r.email}</span>
-                </button>`;
+        html += `<div class="flex items-center gap-2">
+                    <button onclick="loginDiretoCache('${r.email}', '${r.token}')" type="button" class="flex-1 flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2 rounded-lg transition-all w-full text-left">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold uppercase shrink-0">${r.email.charAt(0)}</div>
+                        <span class="text-sm font-medium truncate">${r.email}</span>
+                    </button>
+                    <button onclick="removerLoginCache('${r.email}')" type="button" class="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-all shrink-0" title="Remover acesso">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
+                 </div>`;
     });
     
     html += `</div>`;
     container.innerHTML = html;
+}
+
+function removerLoginCache(email) {
+    let recents = JSON.parse(localStorage.getItem('recentLoginsCache') || '[]');
+    recents = recents.filter(r => r.email !== email);
+    localStorage.setItem('recentLoginsCache', JSON.stringify(recents));
+    renderRecentLogins();
 }
 
 function loginDiretoCache(email, token) {
@@ -2336,3 +2513,52 @@ function loginDiretoCache(email, token) {
 
 document.addEventListener('DOMContentLoaded', renderRecentLogins);
 
+
+
+// ============================================================================
+// ADMIN PANEL UI
+// ============================================================================
+
+function renderizarUsuarios(usuarios) {
+    const tbody = document.getElementById('tabela-usuarios-body');
+    if(!tbody) return;
+    
+    if(usuarios.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">Nenhum usuário encontrado.</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    usuarios.forEach(u => {
+        const email = u.email || 'Sem e-mail';
+        const perfil = u.perfil || 'VISITOR';
+        const isAdmin = perfil === 'ADMIN';
+        
+        const badgeClass = isAdmin ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600';
+        
+        let acoes = '';
+        if (email !== window.auth.currentUser?.email) {
+            if (isAdmin) {
+                acoes = `<button onclick="alterarCargoUsuario('${u.id}', 'VISITOR')" class="text-xs text-orange-600 hover:text-orange-800 font-bold bg-orange-50 px-3 py-1 rounded transition">Tornar Visitante</button>`;
+            } else {
+                acoes = `<button onclick="alterarCargoUsuario('${u.id}', 'ADMIN')" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold bg-indigo-50 px-3 py-1 rounded transition">Tornar Admin</button>`;
+            }
+        } else {
+            acoes = `<span class="text-xs text-slate-400 italic">Você</span>`;
+        }
+        
+        html += `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                <td class="px-4 py-3 font-medium text-slate-800">${email}</td>
+                <td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${badgeClass}">${perfil}</span></td>
+                <td class="px-4 py-3 text-right">
+                    <div class="flex justify-end gap-2">${acoes}</div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+window.renderizarUsuarios = renderizarUsuarios;
