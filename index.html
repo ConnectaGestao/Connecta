@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connecta</title>
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    
     <!-- FAVICON (Local) -->
     <link rel="icon" type="image/png" href="favicon.png">
     
@@ -27,7 +31,7 @@
         document.write('<link rel="stylesheet" href="css/style.css?v=' + Date.now() + '">');
     </script>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans flex">
+<body class="bg-slate-100 min-h-screen font-sans flex text-slate-800">
 
     <!-- TELA DE LOGIN -->
     <div id="view-login" class="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center p-4">
@@ -85,7 +89,6 @@
     <!-- BARRA LATERAL (SIDEBAR) -->
     <aside id="sidebar" class="w-64 bg-slate-900 text-white fixed h-full left-0 top-0 overflow-y-auto hidden md:flex flex-col z-[120] shadow-2xl transition-all">
         <div class="p-6 border-b border-slate-800">
-            <!-- MUDANÇA DE TÍTULO AQUI -->
             <div class="flex items-center gap-2 font-bold text-xl text-blue-400">
                 <i data-lucide="database"></i> Connecta
             </div>
@@ -105,6 +108,9 @@
             <button onclick="switchTab('lista-pacientes')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
                 <i data-lucide="users" class="w-5 h-5 group-hover:text-blue-400"></i> Munícipes
             </button>
+            <button onclick="switchTab('aniversariantes')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+                <i data-lucide="gift" class="w-5 h-5 group-hover:text-pink-400"></i> Aniversariantes
+            </button>
             <button onclick="switchTab('lista-atendimentos')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
                 <i data-lucide="list" class="w-5 h-5 group-hover:text-blue-400"></i> Atendimentos
             </button>
@@ -117,17 +123,15 @@
             <button onclick="switchTab('parceiros')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
                 <i data-lucide="handshake" class="w-5 h-5 group-hover:text-emerald-400"></i> Parceiros
             </button>
-            <button id="nav-import" onclick="switchTab('importacao')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group hidden">
-                <i data-lucide="upload-cloud" class="w-5 h-5 group-hover:text-blue-400"></i> Importar Excel
+            <button id="nav-export" onclick="switchTab('exportacao')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group hidden">
+                <i data-lucide="download-cloud" class="w-5 h-5 group-hover:text-blue-400"></i> Exportar Excel
             </button>
             <button id="nav-admin" onclick="switchTab('admin-panel')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group hidden">
                 <i data-lucide="shield" class="w-5 h-5 group-hover:text-yellow-400"></i> Admin
             </button>
-
         </nav>
 
         <div id="sidebar-actions" class="p-4 border-t border-slate-800">
-            <!-- BOTÃO GERAR FICHA REMOVIDO -->
             <button onclick="switchTab('form-paciente')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow-lg mb-2 flex items-center justify-center gap-2">
                 <i data-lucide="plus"></i> Novo Munícipe
             </button>
@@ -158,6 +162,10 @@
                 <h2 class="text-2xl font-bold text-slate-800">Dashboard Analítico</h2>
                 
                 <div class="flex flex-wrap gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+                    <select id="dash-modo" onchange="aplicarFiltrosDashboard()" class="text-sm bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 rounded px-2 py-1">
+                        <option value="municipe">Modo: Munícipe</option>
+                        <option value="atendimento">Modo: Atendimento</option>
+                    </select>
                     <select id="dash-filter-status" onchange="aplicarFiltrosDashboard()" class="text-sm bg-slate-50 border border-slate-300 rounded px-2 py-1">
                         <option value="">Status: Todos</option>
                         <option value="PENDENTE">Pendentes</option>
@@ -278,14 +286,70 @@
         </div>
 
         <!-- LISTA PACIENTES (MUNÍCIPES) -->
+        <!-- TELA DE ANIVERSARIANTES -->
+        <div id="view-aniversariantes" class="hidden fade-in space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><i data-lucide="gift" class="text-pink-500 w-7 h-7"></i> Aniversariantes</h2>
+                <div class="text-sm text-slate-500">
+                    Acompanhe os aniversários de hoje, recentes e dos próximos 7 dias.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- COLUNA: HOJE -->
+                <div class="bg-pink-50 rounded-xl shadow-sm border border-pink-200 p-5 flex flex-col">
+                    <h3 class="text-xl font-bold text-pink-700 flex items-center gap-2 mb-4 border-b border-pink-200 pb-2"><i data-lucide="party-popper" class="w-6 h-6"></i> Hoje</h3>
+                    <div id="lista-aniv-hoje" class="space-y-3 flex-1 flex flex-col">
+                        <div class="text-center text-pink-400 text-sm italic my-auto py-8">Nenhum aniversariante hoje.</div>
+                    </div>
+                </div>
+
+                <!-- COLUNA: RECENTES -->
+                <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
+                    <h3 class="text-lg font-bold text-slate-700 flex items-center gap-2 mb-4 border-b border-slate-200 pb-2"><i data-lucide="clock" class="w-5 h-5 text-slate-400"></i> Últimos 2 dias</h3>
+                    <div id="lista-aniv-recentes" class="space-y-3 flex-1 flex flex-col">
+                        <div class="text-center text-slate-400 text-sm italic my-auto py-8">Carregando...</div>
+                    </div>
+                </div>
+
+                <!-- COLUNA: PRÓXIMOS -->
+                <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-200 p-5 flex flex-col">
+                    <h3 class="text-lg font-bold text-blue-700 flex items-center gap-2 mb-4 border-b border-blue-200 pb-2"><i data-lucide="calendar-days" class="w-5 h-5 text-blue-500"></i> Próximos 7 dias</h3>
+                    <div id="lista-aniv-proximos" class="space-y-3 flex-1 flex flex-col">
+                        <div class="text-center text-blue-400 text-sm italic my-auto py-8">Carregando...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RELATÓRIO MENSAL DE ANIVERSARIANTES -->
+            <div class="pt-6 border-t border-slate-200">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <h3 class="text-xl font-bold text-slate-800"><i data-lucide="list-filter" class="w-5 h-5 inline text-slate-400"></i> Relatório Mensal Completo</h3>
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <span class="text-sm font-bold text-slate-500">Mês:</span>
+                        <select id="filtro-niver-mes" onchange="carregarAniversarios()" class="flex-1 md:w-48 text-sm font-bold border border-pink-200 rounded-lg py-2 px-3 bg-white text-pink-700 focus:outline-none focus:border-pink-500 shadow-sm">
+                            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-pink-50 text-pink-900 uppercase font-bold text-xs border-b border-pink-100">
+                                <tr><th class="px-6 py-4">Data Nasc.</th><th class="px-6 py-4">Nome</th><th class="px-6 py-4">Telefone</th><th class="px-6 py-4">Bairro</th><th class="px-6 py-4">Status</th></tr>
+                            </thead>
+                            <tbody id="tabela-niver-body"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Aguardando dados...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="view-lista-pacientes" class="hidden fade-in">
             <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 pb-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800">Munícipes</h2>
-                    <div class="flex gap-6 mt-2 text-sm font-medium">
-                        <button id="tab-btn-lista" onclick="alternarSubAbaPacientes('lista')" class="text-blue-600 border-b-2 border-blue-600 pb-2 transition-all">Lista Geral</button>
-                        <button id="tab-btn-niver" onclick="alternarSubAbaPacientes('niver')" class="text-slate-500 hover:text-blue-500 pb-2 transition-all flex items-center gap-1"><i data-lucide="cake" class="w-3 h-3"></i> Aniversariantes</button>
-                    </div>
                 </div>
                 
                 <div id="container-busca-pacientes" class="flex gap-2 w-full md:w-auto items-center">
@@ -305,11 +369,6 @@
                     <button onclick="carregarListaPacientes()" class="text-blue-600 hover:text-blue-800 bg-white px-3 py-2 rounded border shadow-sm hover:shadow transition"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
                 </div>
 
-                <div id="container-filtro-niver" class="hidden gap-2 w-full md:w-auto items-center">
-                    <select id="filtro-niver-mes" onchange="carregarAniversarios()" class="input-field bg-white w-48 border-pink-200 focus:border-pink-500">
-                        <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
-                    </select>
-                </div>
             </div>
 
             <div id="subview-pacientes-lista">
@@ -334,18 +393,6 @@
                 </div>
             </div>
 
-            <div id="subview-pacientes-niver" class="hidden">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-pink-50 text-pink-900 uppercase font-bold text-xs border-b border-pink-100">
-                                <tr><th class="px-6 py-4">Data Nasc.</th><th class="px-6 py-4">Nome</th><th class="px-6 py-4">Telefone</th><th class="px-6 py-4">Bairro</th><th class="px-6 py-4">Status</th></tr>
-                            </thead>
-                            <tbody id="tabela-niver-body"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Selecione um mês...</td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-400 mt-3 text-center italic">Clique no aniversariante para ver o histórico completo de atendimentos.</p>
             </div>
         </div>
 
@@ -603,7 +650,12 @@
                             <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                             <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                         </select>
-                        <input type="text" id="inp-filtro-secundario-texto" list="listagens-datalist" class="hidden w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 uppercase" placeholder="Digite aqui...">
+                        <div id="container-filtro-texto" class="hidden relative">
+                            <input type="text" id="inp-filtro-secundario-texto" list="listagens-datalist" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 uppercase pr-10 cursor-pointer hide-datalist-arrow" placeholder="Digite aqui...">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                            </div>
+                        </div>
                         <datalist id="listagens-datalist"></datalist>
                     </div>
 
@@ -665,28 +717,27 @@
             </div>
         </div>
 
-        <!-- TELA DE IMPORTAÇÃO -->
-        <div id="view-importacao" class="hidden bg-white rounded-xl shadow-lg border border-slate-200 fade-in p-6 md:p-8">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="upload-cloud" class="text-blue-600"></i> Importar Excel</h2>
+        <!-- TELA DE EXPORTAÇÃO -->
+        <div id="view-exportacao" class="hidden bg-white rounded-xl shadow-lg border border-slate-200 fade-in p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="download-cloud" class="text-blue-600"></i> Exportar Excel</h2>
             
-            <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800">
+            <div class="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-lg text-sm text-emerald-800">
                 <p class="font-bold mb-2">Instruções:</p>
                 <ul class="list-disc pl-5 space-y-1">
-                    <li>Selecione o arquivo Excel contendo as planilhas <b>Pessoas</b> e <b>Atendimentos</b>.</li>
-                    <li>As colunas precisam estar na primeira linha.</li>
-                    <li>A importação pode levar alguns segundos. Não feche a página.</li>
+                    <li>Exporte todo o banco de dados (Munícipes e Atendimentos) de forma organizada.</li>
+                    <li>O arquivo gerado conterá planilhas separadas com todos os dados preenchidos até o momento.</li>
+                    <li>A exportação processará os dados para que fiquem fáceis de ler no Excel.</li>
                 </ul>
             </div>
 
             <div class="flex flex-col md:flex-row gap-4 items-center">
-                <input type="file" id="input-excel" accept=".xlsx, .xls" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                <button onclick="iniciarImportacao()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow transition flex items-center gap-2 whitespace-nowrap"><i data-lucide="play" class="w-4 h-4"></i> Iniciar Importação</button>
+                <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-bold shadow-md transition flex items-center justify-center gap-2 w-full md:w-auto"><i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Gerar e Baixar Planilha</button>
             </div>
 
-            <div id="loading-import" class="hidden mt-8 text-center">
-                <i data-lucide="loader-2" class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-2"></i>
-                <p class="text-slate-600 font-medium">Processando planilha e salvando no banco de dados...</p>
-                <p id="import-stats" class="text-xs text-slate-400 mt-2"></p>
+            <div id="loading-export" class="hidden mt-8 text-center">
+                <i data-lucide="loader-2" class="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-2"></i>
+                <p class="text-slate-600 font-medium">Buscando e formatando todos os dados do sistema...</p>
+                <p class="text-xs text-slate-400 mt-2">Isso pode levar alguns instantes.</p>
             </div>
         </div>
 
@@ -777,9 +828,9 @@
                         <div>
                             <h3 class="form-section-title">Endereço</h3>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                                <div class="md:col-span-3"><label class="label-field">CEP</label><input type="text" name="cep" id="field_cep" class="input-field"></div>
-                                <div class="md:col-span-5" id="container_municipio"></div>
-                                <div class="md:col-span-4" id="container_bairro"></div>
+                                <div class="md:col-span-3"><label class="label-field">CEP</label><input type="text" name="cep" id="field_cep" class="input-field" maxlength="9" oninput="this.value = this.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2')" onblur="buscarCep(this.value)"></div>
+                                <div class="md:col-span-5"><label class="label-field">Município</label><input type="text" name="municipio" id="field_municipio" class="input-field bg-slate-100 cursor-not-allowed uppercase" readonly></div>
+                                <div class="md:col-span-4"><label class="label-field">Bairro</label><input type="text" name="bairro" id="field_bairro" class="input-field bg-slate-100 cursor-not-allowed uppercase" readonly></div>
                                 <div class="md:col-span-8"><label class="label-field">Logradouro</label><input type="text" name="logradouro" id="field_logradouro" class="input-field uppercase"></div>
                                 <div class="md:col-span-4"><label class="label-field">Ponto de Referência</label><input type="text" name="referencia" id="field_referencia" class="input-field uppercase"></div>
                             </div>
@@ -980,21 +1031,67 @@
         </div>
     </main>
 
+    <!-- MODAL GLOBAL DE ALERTA -->
+    <div id="global-modal-alert" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300 relative">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
+                    <i data-lucide="info" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Aviso</h3>
+                <p id="global-alert-msg" class="text-slate-600 text-sm whitespace-pre-line"></p>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-100 flex justify-center">
+                <button id="global-alert-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow transition w-full max-w-[200px]">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GLOBAL DE CONFIRMAÇÃO -->
+    <div id="global-modal-confirm" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300 relative">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                    <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Atenção!</h3>
+                <p id="global-confirm-msg" class="text-slate-600 text-sm whitespace-pre-line"></p>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-100 flex gap-3">
+                <button id="global-confirm-cancel" class="flex-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-lg transition">Cancelar</button>
+                <button id="global-confirm-ok" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS DINÂMICOS (CACHE BUSTING) -->
     <script>
         const scripts = [
             'js/config.js',
             'js/firebase.js',
+            'js/stats.js',
             'js/ui.js',
+            'js/ui-forms.js',
+            'js/ui-tables.js',
             'js/charts.js',
             'js/api.js',
-            'js/importer.js',
+            'js/aniversariantes.js',
+            'js/exporter.js',
             'js/main.js'
         ];
         // Adiciona um timestamp único para forçar o download dos scripts
         scripts.forEach(s => {
             document.write('<script src="' + s + '?v=' + Date.now() + '"><\/script>');
         });
+        
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('Service Worker Registrado!', reg.scope))
+                    .catch(err => console.error('Service Worker Falhou:', err));
+            });
+        }
     </script>
 </body>
 </html>

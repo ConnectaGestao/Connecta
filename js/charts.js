@@ -5,18 +5,31 @@
 
 let chartsInstance = {};
 
-function countByField(arr, field, limit) {
+function countByField(arr, field, limit, modo = 'atendimento') {
     const counts = {};
+    const cpfsSeen = {};
+    
     arr.forEach(item => {
         const val = item[field] ? item[field].trim().toUpperCase() : 'N/I';
+        
+        if (modo === 'municipe') {
+            const cpf = item.cpf_paciente || item.cpf;
+            if (cpf) {
+                if (!cpfsSeen[val]) cpfsSeen[val] = new Set();
+                if (cpfsSeen[val].has(cpf)) return; // Já contou este paciente para esta categoria
+                cpfsSeen[val].add(cpf);
+            }
+        }
+        
         counts[val] = (counts[val] || 0) + 1;
     });
+    
     return Object.entries(counts)
         .sort((a,b) => b[1] - a[1])
         .slice(0, limit || 1000); 
 }
 
-function renderizarGraficos(atendimentos, pacientes) {
+function renderizarGraficos(atendimentos, pacientes, modo = 'atendimento') {
     const barOptions = { 
         indexAxis: 'y', 
         responsive: true, 
@@ -25,15 +38,15 @@ function renderizarGraficos(atendimentos, pacientes) {
     };
     
     // 1. Gráfico de Especialidades (Top 10)
-    const especData = countByField(atendimentos, 'especialidade');
+    const especData = countByField(atendimentos, 'especialidade', 10, modo);
     createChart('chartEspecialidade', 'bar', 
         especData.map(i=>i[0]), 
         especData.map(i=>i[1]), 
         { ...barOptions, backgroundColor: '#3b82f6' } 
     );
 
-    // 2. Gráfico de Procedimentos
-    const procData = countByField(atendimentos, 'procedimento');
+    // 2. Gráfico de Procedimentos (Top 10)
+    const procData = countByField(atendimentos, 'procedimento', 10, modo);
     createChart('chartProcedimento', 'bar', 
         procData.map(i=>i[0]), 
         procData.map(i=>i[1]), 
@@ -41,7 +54,7 @@ function renderizarGraficos(atendimentos, pacientes) {
     );
 
     // 3. Gráfico de Locais
-    const localData = countByField(atendimentos, 'local');
+    const localData = countByField(atendimentos, 'local', null, modo);
     createChart('chartLocal', 'bar', 
         localData.map(i=>i[0]), 
         localData.map(i=>i[1]), 
@@ -49,7 +62,7 @@ function renderizarGraficos(atendimentos, pacientes) {
     );
 
     // 4. Gráfico de Tipos de Serviço
-    const tipoData = countByField(atendimentos, 'tipo');
+    const tipoData = countByField(atendimentos, 'tipo', null, modo);
     createChart('chartTipo', 'bar', 
         tipoData.map(i=>i[0]), 
         tipoData.map(i=>i[1]), 
@@ -57,7 +70,7 @@ function renderizarGraficos(atendimentos, pacientes) {
     );
 
     // 5. Gráfico de Título de Eleitor - CLICKABLE
-    const tituloData = countByField(pacientes, 'status_titulo');
+    const tituloData = countByField(pacientes, 'status_titulo', null, modo);
     
     const towerOptions = { 
         responsive: true, 

@@ -244,7 +244,7 @@ async function carregarAniversarios() {
             tr.className = rowClass;
             tr.onclick = function() { 
                 if(p.cpf || p.nome) verHistoricoCompleto(p);
-                else alert("Cadastro incompleto (sem CPF/Nome).");
+                else showModalAlert("Cadastro incompleto (sem CPF/Nome).");
             };
             
             tr.innerHTML = `
@@ -337,7 +337,7 @@ async function submitPaciente(e) {
     const rawCpf = document.getElementById('paciente_cpf_check').value;
     data.cpf = String(rawCpf).replace(/\\D/g, '');
     
-    if(!data.cpf || data.cpf.length < 5) { alert("CPF obrigatório."); return; }
+    if(!data.cpf || data.cpf.length < 5) { showModalAlert("CPF obrigatório."); return; }
     
     const loading = document.getElementById('loading-paciente');
     setLoadingText('loading-paciente', "Salvando...");
@@ -352,6 +352,9 @@ async function submitPaciente(e) {
 
     try {
         let docId = data.id;
+        let acao = 'criar';
+        let dadosAnteriores = null;
+        
         if (!docId) {
             // New patient
             data.data_criacao = new Date().toISOString();
@@ -359,8 +362,16 @@ async function submitPaciente(e) {
             docId = docRef.id;
         } else {
             // Update patient
+            acao = 'editar';
+            const oldSnap = await window.getDoc(window.doc(window.db, "pacientes", docId));
+            if(oldSnap.exists()) dadosAnteriores = oldSnap.data();
+            
             const { id, ...updateData } = data; // remove id from data
             await window.updateDoc(window.doc(window.db, "pacientes", docId), updateData);
+        }
+
+        if(typeof atualizarEstatisticas === 'function') {
+            await atualizarEstatisticas('pacientes', acao, dadosAnteriores, data);
         }
 
         // Salva novos filtros automaticamente
@@ -376,7 +387,7 @@ async function submitPaciente(e) {
         if(typeof voltarInicio === 'function') voltarInicio(); 
     } catch (err) {
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
-        alert("Erro ao salvar: " + err);
+        showModalAlert("Erro ao salvar: " + err);
     }
 }
 
@@ -505,6 +516,7 @@ function filtrarAtendimentos() {
     }
 }
 
+
 async function loadDashboard() {
     try {
         const pacSnap = await window.getDocs(window.collection(window.db, "pacientes"));
@@ -530,6 +542,7 @@ function popularFiltroAno() {
         if(at.data_abertura) anos.add(at.data_abertura.split('-')[0]);
     });
     const sel = document.getElementById('dash-filter-ano');
+    if (!sel) return;
     const current = sel.value;
     sel.innerHTML = '<option value="">Ano: Todos</option>';
     Array.from(anos).sort().reverse().forEach(a => sel.innerHTML += `<option value="${a}">${a}</option>`);
@@ -539,9 +552,11 @@ function popularFiltroAno() {
 function aplicarFiltrosDashboard() {
     if(!dashboardRawData) return;
     
-    const fStatus = document.getElementById('dash-filter-status').value;
-    const fMes = document.getElementById('dash-filter-mes').value;
-    const fAno = document.getElementById('dash-filter-ano').value;
+    const fStatus = document.getElementById('dash-filter-status') ? document.getElementById('dash-filter-status').value : '';
+    const fMes = document.getElementById('dash-filter-mes') ? document.getElementById('dash-filter-mes').value : '';
+    const fAno = document.getElementById('dash-filter-ano') ? document.getElementById('dash-filter-ano').value : '';
+    const modoSelect = document.getElementById('dash-modo');
+    const modo = modoSelect ? modoSelect.value : 'municipe';
     
     const temFiltroAtivo = fStatus !== "" || fMes !== "" || fAno !== "";
 
@@ -554,23 +569,40 @@ function aplicarFiltrosDashboard() {
     });
 
     let pacientesFiltrados;
-    if (temFiltroAtivo) {
+    if (modo === 'atendimento') {
         const cpfsNosAtendimentos = new Set(atendimentosFiltrados.map(at => at.cpf_paciente));
         pacientesFiltrados = dashboardRawData.pacientes.filter(p => cpfsNosAtendimentos.has(p.cpf));
     } else {
-        pacientesFiltrados = dashboardRawData.pacientes;
+        pacientesFiltrados = dashboardRawData.pacientes.filter(p => {
+            if (!temFiltroAtivo) return true;
+            let y = '', m = '';
+            if (p.data_criacao) {
+                const dataObj = new Date(p.data_criacao);
+                if (!isNaN(dataObj)) {
+                    y = dataObj.getFullYear().toString();
+                    m = (dataObj.getMonth() + 1).toString().padStart(2, '0');
+                }
+            }
+            if (fMes && m !== fMes) return false;
+            if (fAno && y !== fAno) return false;
+            return true;
+        });
     }
+    window.pacientesDashboardFiltrados = pacientesFiltrados;
 
     const totalPacientes = pacientesFiltrados.length; 
     const totalAtendimentos = atendimentosFiltrados.length;
     const totalPendentes = atendimentosFiltrados.filter(at => at.status === 'PENDENTE').length;
 
-    document.getElementById('dash-pacientes').innerText = totalPacientes;
-    document.getElementById('dash-mes').innerText = totalAtendimentos;
-    document.getElementById('dash-pendentes').innerText = totalPendentes;
+    const dp = document.getElementById('dash-pacientes');
+    if (dp) dp.innerText = totalPacientes;
+    const dm = document.getElementById('dash-mes');
+    if (dm) dm.innerText = totalAtendimentos;
+    const dpend = document.getElementById('dash-pendentes');
+    if (dpend) dpend.innerText = totalPendentes;
 
-    if(typeof renderizarGraficos === 'function') renderizarGraficos(atendimentosFiltrados, pacientesFiltrados);
-    calcularMetricasTempo(atendimentosFiltrados);
+    if(typeof renderizarGraficos === 'function') renderizarGraficos(atendimentosFiltrados, pacientesFiltrados, modo);
+    if(typeof calcularMetricasTempo === 'function') calcularMetricasTempo(atendimentosFiltrados);
     if(typeof renderizarTorreGenero === 'function') renderizarTorreGenero(pacientesFiltrados);
 }
 
@@ -970,18 +1002,32 @@ async function excluirPacienteAPI(id, cpf) {
     if(loading) { loading.classList.remove('hidden'); loading.classList.add('flex'); }
 
     try {
-        await window.deleteDoc(window.doc(window.db, "pacientes", id));
+        const pacRef = window.doc(window.db, "pacientes", id);
+        const pacSnap = await window.getDoc(pacRef);
+        let dadosPaciente = null;
+        if(pacSnap.exists()) dadosPaciente = pacSnap.data();
+
+        await window.deleteDoc(pacRef);
         
         // Cascading delete for atendimentos
-        const searchCpf = String(cpf).replace(/\\D/g, '');
+        const searchCpf = String(cpf).replace(/\D/g, '');
         const q = window.query(window.collection(window.db, "atendimentos"), window.where("cpf_paciente", "==", searchCpf));
         const querySnapshot = await window.getDocs(q);
         
+        let atendimentosExcluidos = [];
         const batch = window.writeBatch(window.db);
         querySnapshot.forEach((doc) => {
+            atendimentosExcluidos.push(doc.data());
             batch.delete(doc.ref);
         });
         await batch.commit();
+
+        if (typeof atualizarEstatisticas === 'function') {
+            if (dadosPaciente) await atualizarEstatisticas('pacientes', 'excluir', dadosPaciente, null);
+            for (let atd of atendimentosExcluidos) {
+                await atualizarEstatisticas('atendimentos', 'excluir', atd, null);
+            }
+        }
 
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
         showMessage("Munícipe e atendimentos excluídos.", 'success');
@@ -990,7 +1036,7 @@ async function excluirPacienteAPI(id, cpf) {
         if(typeof voltarInicio === 'function') voltarInicio();
     } catch(e) {
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
-        alert("Erro ao excluir: " + e);
+        showModalAlert("Erro ao excluir: " + e);
     }
 }
 
@@ -1000,7 +1046,17 @@ async function excluirAtendimentoAPI(id) {
     if(loading) { loading.classList.remove('hidden'); loading.classList.add('flex'); }
 
     try {
-        await window.deleteDoc(window.doc(window.db, "atendimentos", id));
+        const atdRef = window.doc(window.db, "atendimentos", id);
+        const atdSnap = await window.getDoc(atdRef);
+        let dadosAtd = null;
+        if(atdSnap.exists()) dadosAtd = atdSnap.data();
+
+        await window.deleteDoc(atdRef);
+
+        if(typeof atualizarEstatisticas === 'function' && dadosAtd) {
+            await atualizarEstatisticas('atendimentos', 'excluir', dadosAtd, null);
+        }
+
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
         showMessage("Atendimento excluído.", 'success');
         
@@ -1008,12 +1064,10 @@ async function excluirAtendimentoAPI(id) {
         if(typeof voltarInicio === 'function') voltarInicio();
     } catch(e) {
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
-        alert("Erro ao excluir: " + e);
+        showModalAlert("Erro ao excluir: " + e);
     }
 }
-
 // O restante do submitAtendimento está no ui.js, porém ui.js chamava sendData('registerServiceBatch' ou 'registerService')
-// Vamos criar essas funções globais de wrapper aqui para ui.js continuar usando como sendData,
 // ou alterar ui.js. Para ser menos intrusivo, farei o `sendData` atuar como ponte
 async function sendData(action, data, loadingId) {
     const loading = document.getElementById(loadingId);
@@ -1037,11 +1091,22 @@ async function sendData(action, data, loadingId) {
     try {
         if (action === 'registerService') {
             const { id, ...updateData } = data;
+            let acao = 'criar';
+            let dadosAnteriores = null;
+
             if (id) {
+                acao = 'editar';
+                const oldSnap = await window.getDoc(window.doc(window.db, "atendimentos", id));
+                if(oldSnap.exists()) dadosAnteriores = oldSnap.data();
                 await window.updateDoc(window.doc(window.db, "atendimentos", id), updateData);
             } else {
                 await window.addDoc(window.collection(window.db, "atendimentos"), updateData);
             }
+
+            if(typeof atualizarEstatisticas === 'function') {
+                await atualizarEstatisticas('atendimentos', acao, dadosAnteriores, data);
+            }
+
             await saveNewFilter('CATEGORIAS', data.tipo_servico);
             await saveNewFilter('PARCEIRO', data.parceiro);
             await saveNewFilter('LOCAL', data.local);
@@ -1058,10 +1123,9 @@ async function sendData(action, data, loadingId) {
             const atendimentosRef = window.collection(window.db, "atendimentos");
             
             data.forEach(item => {
-                const docRef = window.doc(atendimentosRef); // Auto-generate ID
+                const docRef = window.doc(atendimentosRef);
                 batch.set(docRef, item);
                 
-                // Fire-and-forget filter save
                 saveNewFilter('CATEGORIAS', item.tipo_servico);
                 saveNewFilter('PARCEIRO', item.parceiro);
                 saveNewFilter('LOCAL', item.local);
@@ -1069,60 +1133,90 @@ async function sendData(action, data, loadingId) {
                 saveNewFilter('ATENDIMENTO', item.tipo);
                 saveNewFilter('PROCEDIMENTO_EXAMES', item.procedimento);
             });
+
             await batch.commit();
+
+            if(typeof atualizarEstatisticas === 'function') {
+                for(let item of data) {
+                    await atualizarEstatisticas('atendimentos', 'criar', null, item);
+                }
+            }
 
             if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
             showMessage(`${data.length} atendimentos salvos!`, 'success');
             return true;
         }
         else if (action === 'registerPatient') {
-             // Already handled in submitPaciente directly, but adding just in case
-             // fallback to original api.js usage
-             const { id, ...updateData } = data;
-             if (id) {
-                 await window.updateDoc(window.doc(window.db, "pacientes", id), updateData);
-             } else {
-                 updateData.data_criacao = new Date().toISOString();
-                 await window.addDoc(window.collection(window.db, "pacientes"), updateData);
-             }
-             if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
-             showMessage('Munícipe salvo com sucesso!', 'success');
-             return true;
+             return false;
         }
-        
-    } catch(e) { 
+    } catch(e) {
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
-        console.error("Erro na operação:", e);
-        alert("Erro de conexão: " + e); 
-        return false; 
+        showModalAlert("Erro: " + e);
+        return false;
     }
 }
-
+window.sendData = sendData;
+window.submitPaciente = submitPaciente;
+window.excluirPacienteAPI = excluirPacienteAPI;
+window.excluirAtendimentoAPI = excluirAtendimentoAPI;
 
 // ============================================================================
-// ADMIN PANEL: GERENCIAMENTO DE USUÁRIOS
+// 7. PAINEL ADMIN E USUÁRIOS
 // ============================================================================
 
 async function carregarListaUsuarios() {
+    const tbody = document.getElementById('tabela-usuarios-body');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-slate-500">Carregando usuários...</td></tr>';
+    
     try {
-        const tbody = document.getElementById('tabela-usuarios-body');
-        if(!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">Carregando usuários...</td></tr>';
+        const querySnapshot = await window.getDocs(window.collection(window.db, 'usuarios'));
+        tbody.innerHTML = '';
         
-        const q = window.query(window.collection(window.db, 'usuarios'));
-        const querySnapshot = await window.getDocs(q);
-        
-        let usuarios = [];
-        querySnapshot.forEach(doc => {
-            usuarios.push({ id: doc.id, ...doc.data() });
-        });
-        
-        if (typeof renderizarUsuarios === 'function') {
-            renderizarUsuarios(usuarios);
+        if (querySnapshot.empty) {
+            tbody.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-slate-500">Nenhum usuário encontrado.</td></tr>';
+            return;
         }
-    } catch (e) {
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const email = data.email || 'N/A';
+            const perfil = data.perfil || 'padrao';
+            
+            // Aceita "admin" ou "ADMIN" para manter compatibilidade com registros antigos, 
+            // mas ao salvar salvará como ADMIN.
+            const isAdm = perfil.toUpperCase() === 'ADMIN';
+            const badgeCor = isAdm ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-700 border border-slate-200';
+            const nomePerfil = isAdm ? 'Administrador' : 'Visitante';
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-4 py-4 text-left">
+                    <div class="flex items-center gap-3">
+                        <div class="${isAdm ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'} w-8 h-8 rounded-full flex items-center justify-center font-bold uppercase shadow-sm">
+                            ${email.charAt(0)}
+                        </div>
+                        <span class="font-medium text-slate-800">${email}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-4 text-center">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${badgeCor} inline-block min-w-[100px] text-center">
+                        ${nomePerfil}
+                    </span>
+                </td>
+                <td class="px-4 py-4 text-right">
+                    <label class="relative inline-flex items-center cursor-pointer group" title="Alterar acesso">
+                        <input type="checkbox" class="sr-only peer" ${isAdm ? 'checked' : ''} onchange="alterarCargoUsuario('${doc.id}', this.checked ? 'ADMIN' : 'padrao')">
+                        <div class="w-14 h-7 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600 group-hover:opacity-90"></div>
+                    </label>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch(e) {
         console.error('Erro ao buscar usuários:', e);
-        alert('Erro ao buscar usuários.');
+        showModalAlert('Erro ao buscar usuários.');
     }
 }
 
@@ -1132,9 +1226,10 @@ async function alterarCargoUsuario(uid, novoCargo) {
             perfil: novoCargo
         });
         carregarListaUsuarios();
+        showMessage('Cargo atualizado com sucesso!', 'success');
     } catch(e) {
         console.error('Erro ao alterar cargo:', e);
-        alert('Erro ao alterar cargo do usuário.');
+        showModalAlert('Erro ao alterar cargo do usuário.');
     }
 }
 

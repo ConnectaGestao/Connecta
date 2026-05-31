@@ -9,8 +9,13 @@
 }
 
 /* Garante visibilidade do ícone de calendário em inputs date */
-input::-webkit-calendar-picker-indicator { 
+input[type="date"]::-webkit-calendar-picker-indicator { 
     opacity: 100; 
+}
+
+/* Esconde a seta padrão de datalist dos navegadores (mantém só a seta customizada) */
+.hide-datalist-arrow::-webkit-calendar-picker-indicator {
+    display: none !important;
 }
 
 /* Animação de entrada suave */

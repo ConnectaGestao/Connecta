@@ -28,8 +28,6 @@ const firebaseConfig = {
 // ============================================================================
 const CONFIG_SELECTS = [
     // Formulário Munícipe
-    { id: 'municipio', label: 'Município', container: 'container_municipio', key: 'MUNICIPIO' },
-    { id: 'bairro', label: 'Bairro', container: 'container_bairro', key: 'BAIRRO' },
     { id: 'status_titulo', label: 'Situação do Título', container: 'container_status_titulo', key: 'STATUS_TITULO' },
     { id: 'indicacao', label: 'Indicação (Liderança)', container: 'container_indicacao', key: 'INDICACAO' },
 
