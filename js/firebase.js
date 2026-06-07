@@ -2,6 +2,16 @@
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// Ativa a persistência offline agressiva (Otimização Extrema)
+db.enablePersistence({ synchronizeTabs: true })
+  .catch(function(err) {
+      if (err.code == 'failed-precondition') {
+          console.warn("Múltiplas abas abertas, persistência ativada apenas na primeira.");
+      } else if (err.code == 'unimplemented') {
+          console.warn("O navegador não suporta persistência offline do Firebase.");
+      }
+  });
+
 // Coloca globais para api.js
 window.db = db;
 window.auth = firebase.auth();

@@ -124,11 +124,18 @@ async function carregarListaPacientes() {
     if(tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Carregando lista...</td></tr>';
     
     try {
-        const q = window.query(window.collection(window.db, "pacientes"), window.orderBy("data_criacao", "desc"));
+        const q = window.query(window.collection(window.db, "pacientes"));
         const querySnapshot = await window.getDocs(q);
         const pacientes = [];
         querySnapshot.forEach((doc) => {
-            pacientes.push({ id: doc.id, ...doc.data() });
+            pacientes.push({ ...doc.data(), id: doc.id });
+        });
+        
+        // Ordena em memória para evitar exclusão de docs sem data_criacao
+        pacientes.sort((a, b) => {
+            const d1 = a.data_criacao || '';
+            const d2 = b.data_criacao || '';
+            return d2.localeCompare(d1);
         });
         
         todosPacientes = pacientes;
@@ -283,7 +290,7 @@ async function verificarCpfInicial() {
         loading.classList.add('hidden'); loading.classList.remove('flex');
         if(!querySnapshot.empty) {
             const doc = querySnapshot.docs[0];
-            pacienteAtual = { id: doc.id, ...doc.data() };
+            pacienteAtual = { ...doc.data(), id: doc.id };
             msg.innerHTML = `<span class="text-blue-700 font-bold flex items-center gap-1"><i data-lucide="check" class="w-4 h-4"></i> Encontrado: ${pacienteAtual.nome}</span>`;
             document.getElementById('opcoes-paciente-existente').classList.remove('hidden');
         } else {
@@ -308,8 +315,8 @@ async function verificarPorId(id) {
         const docSnap = await window.getDoc(docRef);
         
         loading.classList.add('hidden'); loading.classList.remove('flex');
-        if(docSnap.exists()) {
-            pacienteAtual = { id: docSnap.id, ...docSnap.data() };
+        if(docSnap.exists) {
+            pacienteAtual = { ...docSnap.data(), id: docSnap.id };
             
             const msgElement = document.getElementById('msg_cpf_paciente');
             const cpfStr = pacienteAtual.cpf ? String(pacienteAtual.cpf) : '';
@@ -355,16 +362,33 @@ async function submitPaciente(e) {
         let acao = 'criar';
         let dadosAnteriores = null;
         
+        // Verifica se CPF já existe para evitar duplicidades
+        const checkQ = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", data.cpf));
+        const checkSnap = await window.getDocs(checkQ);
+        
         if (!docId) {
+            if (!checkSnap.empty) {
+                showModalAlert("Erro: Este CPF já está cadastrado no sistema!");
+                if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
+                return;
+            }
             // New patient
             data.data_criacao = new Date().toISOString();
             const docRef = await window.addDoc(window.collection(window.db, "pacientes"), data);
             docId = docRef.id;
         } else {
+            if (!checkSnap.empty) {
+                const existingDoc = checkSnap.docs[0];
+                if (existingDoc.id !== docId) {
+                    showModalAlert("Erro: Este CPF já pertence a outro munícipe!");
+                    if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
+                    return;
+                }
+            }
             // Update patient
             acao = 'editar';
             const oldSnap = await window.getDoc(window.doc(window.db, "pacientes", docId));
-            if(oldSnap.exists()) dadosAnteriores = oldSnap.data();
+            if(oldSnap.exists) dadosAnteriores = oldSnap.data();
             
             const { id, ...updateData } = data; // remove id from data
             await window.updateDoc(window.doc(window.db, "pacientes", docId), updateData);
@@ -382,6 +406,7 @@ async function submitPaciente(e) {
         
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
         showMessage('Munícipe salvo com sucesso!', 'success');
+        if(typeof window.logAuditoria === 'function') window.logAuditoria(data.id ? 'EDITAR_MUNICIPE' : 'CRIAR_MUNICIPE', 'MUNICIPES', 'Nome: ' + data.nome);
         
         if(typeof resetFormPaciente === 'function') resetFormPaciente(); 
         if(typeof voltarInicio === 'function') voltarInicio(); 
@@ -390,6 +415,55 @@ async function submitPaciente(e) {
         showModalAlert("Erro ao salvar: " + err);
     }
 }
+
+window.submitAtendimentoAPI = async (batch) => {
+    const loading = document.getElementById('loading-atendimento');
+    setLoadingText('loading-atendimento', "Salvando atendimento(s)...");
+    if(loading) { loading.classList.remove('hidden'); loading.classList.add('flex'); }
+
+    try {
+        const fireBatch = window.writeBatch(window.db);
+        let docsAtualizados = 0;
+        let acao = 'criar';
+
+        for (let data of batch) {
+            let docId = data.id;
+            
+            for(let k in data) {
+                if(typeof data[k] === 'string' && !['cpf_paciente','id'].includes(k) && !k.includes('data')) {
+                    data[k] = data[k].toUpperCase();
+                }
+            }
+
+            if (!docId) {
+                data.data_criacao = new Date().toISOString();
+                const newRef = window.doc(window.collection(window.db, "atendimentos"));
+                fireBatch.set(newRef, data);
+            } else {
+                acao = 'editar';
+                const docRef = window.doc(window.db, "atendimentos", docId);
+                const { id, ...updateData } = data;
+                fireBatch.update(docRef, updateData);
+            }
+            docsAtualizados++;
+        }
+
+        await fireBatch.commit();
+        
+        if(typeof atualizarEstatisticas === 'function') {
+            await atualizarEstatisticas('atendimentos', acao, null, batch[0]);
+        }
+
+        if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
+        showMessage(docsAtualizados > 1 ? 'Atendimentos salvos com sucesso!' : 'Atendimento salvo com sucesso!', 'success');
+        if(typeof window.logAuditoria === 'function') window.logAuditoria('SALVAR_ATENDIMENTO', 'ATENDIMENTOS', 'Prontuário/Data: ' + dataAbertura);
+        return true;
+    } catch (err) {
+        if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
+        if (typeof showModalAlert === 'function') showModalAlert("Erro ao salvar atendimento: " + err);
+        return false;
+    }
+};
 
 // ============================================================================
 // 3. ATENDIMENTOS E DASHBOARD
@@ -429,11 +503,17 @@ async function carregarListaAtendimentos() {
     if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-400">Carregando histórico...</td></tr>';
     
     try {
-        const q = window.query(window.collection(window.db, "atendimentos"), window.orderBy("data_abertura", "desc"));
+        const q = window.query(window.collection(window.db, "atendimentos"));
         const querySnapshot = await window.getDocs(q);
         const atendimentos = [];
         querySnapshot.forEach((doc) => {
-            atendimentos.push({ id: doc.id, ...doc.data() });
+            atendimentos.push({ ...doc.data(), id: doc.id });
+        });
+        
+        atendimentos.sort((a, b) => {
+            const d1 = a.data_abertura || '';
+            const d2 = b.data_abertura || '';
+            return d2.localeCompare(d1);
         });
         
         todosAtendimentos = atendimentos;
@@ -523,10 +603,10 @@ async function loadDashboard() {
         const atendSnap = await window.getDocs(window.collection(window.db, "atendimentos"));
         
         const pacientes = [];
-        pacSnap.forEach(doc => pacientes.push({id: doc.id, ...doc.data()}));
+        pacSnap.forEach(doc => pacientes.push({ ...doc.data(), id: doc.id }));
         
         const atendimentos = [];
-        atendSnap.forEach(doc => atendimentos.push({id: doc.id, ...doc.data()}));
+        atendSnap.forEach(doc => atendimentos.push({ ...doc.data(), id: doc.id }));
         
         dashboardRawData = { pacientes, atendimentos };
         
@@ -826,9 +906,9 @@ function carregarRelatorioRisco() {
     const tbody = document.getElementById('tabela-risco-body');
     if(tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Calculando...</td></tr>';
     
-    if(todosAtendimentos.length === 0) {
-        if(typeof carregarListaAtendimentos === 'function') {
-            carregarListaAtendimentos().then(() => renderizarRelatorioRisco());
+    if(!dashboardRawData || !dashboardRawData.atendimentos || dashboardRawData.atendimentos.length === 0) {
+        if(typeof loadDashboard === 'function') {
+            loadDashboard().then(() => renderizarRelatorioRisco());
         } else {
             renderizarRelatorioRisco();
         }
@@ -846,7 +926,9 @@ function renderizarRelatorioRisco() {
     const trintaDias = new Date();
     trintaDias.setDate(hoje.getDate() + 30);
 
-    const listaRisco = todosAtendimentos.filter(at => {
+    const baseAtendimentos = (dashboardRawData && dashboardRawData.atendimentos) ? dashboardRawData.atendimentos : [];
+
+    const listaRisco = baseAtendimentos.filter(at => {
         if(!at.data_risco || at.status === 'CONCLUIDO' || at.status === 'CANCELADO') return false;
         const dRisco = new Date(at.data_risco);
         return dRisco <= trintaDias;
@@ -996,47 +1078,117 @@ function renderizarTabelaGrafica(containerId, dados, corBarra, tipo) {
 // 6. FUNÇÕES DE EXCLUSÃO (API) E CADASTRO DE ATENDIMENTO
 // ============================================================================
 
-async function excluirPacienteAPI(id, cpf) {
+window.excluirPacienteAPI = async (id, cpf) => {
     const loading = document.getElementById('loading-paciente');
     setLoadingText('loading-paciente', "Excluindo...");
     if(loading) { loading.classList.remove('hidden'); loading.classList.add('flex'); }
-
     try {
-        const pacRef = window.doc(window.db, "pacientes", id);
+        let finalId = id;
+        
+        if (!finalId && cpf) {
+            const cpfLimp = String(cpf).replace(/\D/g, '');
+            const q = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", cpfLimp));
+            const snap = await window.getDocs(q);
+            if (!snap.empty) {
+                finalId = snap.docs[0].id;
+            } else {
+                // Tenta achar com formatação
+                const q2 = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", cpf));
+                const snap2 = await window.getDocs(q2);
+                if (!snap2.empty) finalId = snap2.docs[0].id;
+            }
+        }
+        
+        if (!finalId) {
+            throw new Error("ID não fornecido e não foi possível localizar por CPF.");
+        }
+
+        const pacRef = window.doc(window.db, "pacientes", finalId);
         const pacSnap = await window.getDoc(pacRef);
         let dadosPaciente = null;
-        if(pacSnap.exists()) dadosPaciente = pacSnap.data();
+        if(pacSnap.exists) dadosPaciente = pacSnap.data();
 
         await window.deleteDoc(pacRef);
         
-        // Cascading delete for atendimentos
-        const searchCpf = String(cpf).replace(/\D/g, '');
-        const q = window.query(window.collection(window.db, "atendimentos"), window.where("cpf_paciente", "==", searchCpf));
-        const querySnapshot = await window.getDocs(q);
-        
-        let atendimentosExcluidos = [];
+        const qAtd = window.query(window.collection(window.db, "atendimentos"), window.where("paciente_id", "==", finalId));
+        const atdSnap = await window.getDocs(qAtd);
         const batch = window.writeBatch(window.db);
-        querySnapshot.forEach((doc) => {
-            atendimentosExcluidos.push(doc.data());
+        atdSnap.forEach(doc => {
             batch.delete(doc.ref);
         });
         await batch.commit();
 
-        if (typeof atualizarEstatisticas === 'function') {
-            if (dadosPaciente) await atualizarEstatisticas('pacientes', 'excluir', dadosPaciente, null);
-            for (let atd of atendimentosExcluidos) {
-                await atualizarEstatisticas('atendimentos', 'excluir', atd, null);
-            }
-        }
-
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
-        showMessage("Munícipe e atendimentos excluídos.", 'success');
+        showMessage('Munícipe e atendimentos excluídos.', 'success');
+        if(typeof window.logAuditoria === 'function') window.logAuditoria('EXCLUIR_MUNICIPE', 'MUNICIPES', 'CPF: ' + cpf);
         
         if(typeof resetFormPaciente === 'function') resetFormPaciente();
         if(typeof voltarInicio === 'function') voltarInicio();
     } catch(e) {
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
         showModalAlert("Erro ao excluir: " + e);
+    }
+}
+
+window.mesclarExcluirDuplicataAPI = async (idFraco, idPrincipal, cpf) => {
+    try {
+        let finalIdFraco = idFraco;
+        let finalIdPrincipal = idPrincipal;
+        
+        // Se idFraco for inválido, busca por CPF
+        if ((!finalIdFraco || finalIdFraco === 'undefined') && cpf) {
+            const q = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", String(cpf).replace(/\D/g, '')));
+            const snap = await window.getDocs(q);
+            if (!snap.empty) {
+                // Pega todos que batem com o CPF
+                const docs = snap.docs;
+                // Encontra qual deles é o Principal e qual é o Fraco (se não sabíamos o ID)
+                // Vamos assumir que se finalIdPrincipal for válido, o que não for ele, é o fraco.
+                if (finalIdPrincipal && finalIdPrincipal !== 'undefined') {
+                    const docFraco = docs.find(d => d.id !== finalIdPrincipal);
+                    if (docFraco) finalIdFraco = docFraco.id;
+                } else {
+                    // Se nem o principal tivermos, estamos em um cenário muito corrompido, aborta.
+                    throw new Error("Não foi possível identificar as duas pontas da duplicidade.");
+                }
+            } else {
+                // Tenta buscar com formatação
+                const q2 = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", cpf));
+                const snap2 = await window.getDocs(q2);
+                if (!snap2.empty) {
+                    const docFraco = snap2.docs.find(d => d.id !== finalIdPrincipal);
+                    if (docFraco) finalIdFraco = docFraco.id;
+                }
+            }
+        }
+        
+        if (!finalIdFraco || finalIdFraco === 'undefined') {
+            throw new Error("Munícipe que será excluído não existe mais na base.");
+        }
+
+        const pacRefFraco = window.doc(window.db, "pacientes", finalIdFraco);
+        const pacSnap = await window.getDoc(pacRefFraco);
+        
+        const qAtd = window.query(window.collection(window.db, "atendimentos"), window.where("paciente_id", "==", finalIdFraco));
+        const atdSnap = await window.getDocs(qAtd);
+        
+        const batch = window.writeBatch(window.db);
+        
+        // Transfere todos os atendimentos para o Principal
+        atdSnap.forEach(docAtd => {
+            batch.update(docAtd.ref, {
+                paciente_id: finalIdPrincipal
+            });
+        });
+        
+        // Exclui o fraco
+        batch.delete(pacRefFraco);
+        
+        await batch.commit();
+        return true;
+    } catch(e) {
+        console.error(e);
+        throw e;
     }
 }
 
@@ -1049,7 +1201,7 @@ async function excluirAtendimentoAPI(id) {
         const atdRef = window.doc(window.db, "atendimentos", id);
         const atdSnap = await window.getDoc(atdRef);
         let dadosAtd = null;
-        if(atdSnap.exists()) dadosAtd = atdSnap.data();
+        if(atdSnap.exists) dadosAtd = atdSnap.data();
 
         await window.deleteDoc(atdRef);
 
@@ -1058,7 +1210,8 @@ async function excluirAtendimentoAPI(id) {
         }
 
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
-        showMessage("Atendimento excluído.", 'success');
+        showMessage('Atendimento excluído.', 'success');
+        if(typeof window.logAuditoria === 'function') window.logAuditoria('EXCLUIR_ATENDIMENTO', 'ATENDIMENTOS', 'ID: ' + id);
         
         if(typeof resetFormAtendimento === 'function') resetFormAtendimento();
         if(typeof voltarInicio === 'function') voltarInicio();
@@ -1097,7 +1250,7 @@ async function sendData(action, data, loadingId) {
             if (id) {
                 acao = 'editar';
                 const oldSnap = await window.getDoc(window.doc(window.db, "atendimentos", id));
-                if(oldSnap.exists()) dadosAnteriores = oldSnap.data();
+                if(oldSnap.exists) { dadosAnteriores = oldSnap.data(); }
                 await window.updateDoc(window.doc(window.db, "atendimentos", id), updateData);
             } else {
                 await window.addDoc(window.collection(window.db, "atendimentos"), updateData);
@@ -1235,3 +1388,23 @@ async function alterarCargoUsuario(uid, novoCargo) {
 
 window.carregarListaUsuarios = carregarListaUsuarios;
 window.alterarCargoUsuario = alterarCargoUsuario;
+
+// ==========================================
+// AUDITORIA (LOGS)
+// ==========================================
+window.logAuditoria = async function(acao, modulo, detalhes) {
+    if(!window.db) return;
+    try {
+        const user = window.auth ? window.auth.currentUser : null;
+        const email = user ? user.email : 'desconhecido';
+        await window.addDoc(window.collection(window.db, 'auditoria'), {
+            acao: acao,
+            modulo: modulo,
+            detalhes: detalhes,
+            usuario: email,
+            data_hora: new Date().toISOString()
+        });
+    } catch(e) {
+        console.error('Erro ao registrar auditoria:', e);
+    }
+};

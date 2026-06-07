@@ -86,11 +86,11 @@ function renderizarPainelAniversariantes() {
             const firstName = p.nome.split(' ')[0];
             let msg = '';
             if (tipo === 'hoje') {
-                msg = "Olá " + firstName + "! Parabéns pelo seu aniversário! Que o seu dia seja repleto de alegrias, saúde e paz. Um grande abraço!";
+                msg = "Olá " + firstName + "! Parabéns pelo seu aniversário! Que o seu dia seja repleto de alegrias, saúde e paz. Um grande abraço! ( Família Tudo a Ver )";
             } else if (tipo === 'recente') {
-                msg = "Olá " + firstName + "! Passando para desejar um feliz aniversário atrasado! Que você tenha muita saúde, paz e alegrias neste novo ciclo. Um grande abraço!";
+                msg = "Olá " + firstName + "! Passando para desejar um feliz aniversário atrasado! Que você tenha muita saúde, paz e alegrias neste novo ciclo. Um grande abraço! ( Família Tudo a Ver )";
             }
-            const linkWhats = "https://wa.me/55" + p.tel1.replace(/\D/g, '') + "?text=" + encodeURIComponent(msg);
+            const linkWhats = "https://api.whatsapp.com/send/?phone=55" + p.tel1.replace(/\D/g, '') + "&text=" + encodeURIComponent(msg);
             btnWhatsHtml = `
             <a href="${linkWhats}" target="_blank" class="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1.5 px-2 rounded transition text-center flex justify-center items-center gap-1">
                 <i data-lucide="message-circle" class="w-3 h-3"></i> Whats
@@ -99,12 +99,15 @@ function renderizarPainelAniversariantes() {
             btnWhatsHtml = `<div class="flex-1 text-xs text-slate-400 italic text-center py-1.5 border border-slate-100 rounded">S/ Tel</div>`;
         }
 
+        const age = new Date().getFullYear() - parseInt(p.nascimento.split('-')[0], 10);
+
         return `
         <div class="bg-white p-4 border border-slate-100 shadow-sm rounded-lg hover:shadow-md transition">
             ${tagData}
             <div class="font-bold text-slate-800 text-sm md:text-base truncate" title="${p.nome}">${p.nome}</div>
             <div class="text-xs text-slate-500 mt-1"><i data-lucide="map-pin" class="w-3 h-3 inline"></i> ${p.bairro || 'Bairro ñ info.'}</div>
-            <div class="text-xs text-slate-500 mt-1"><i data-lucide="calendar" class="w-3 h-3 inline"></i> Nasc: ${p.nascimento.split('-').reverse().join('/')}</div>
+            <div class="text-xs text-slate-500 mt-1"><i data-lucide="calendar" class="w-3 h-3 inline"></i> Nasc: ${p.nascimento.split('-').reverse().join('/')} <span class="font-bold text-pink-500">(${age} anos)</span></div>
+            <div class="text-xs text-slate-500 mt-1"><i data-lucide="users" class="w-3 h-3 inline"></i> Indicação: <span class="font-bold text-slate-600">${p.indicacao || p.lideranca_nome || '-'}</span></div>
             
             <div class="mt-3 flex gap-2">
                 <button onclick="verHistoricoCompleto(${pStr})" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-1.5 px-2 rounded transition text-center flex justify-center items-center gap-1 border border-slate-200">

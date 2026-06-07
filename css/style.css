@@ -1,4 +1,4 @@
-/* * css/style.css
+/* css/style.css
  * Estilos personalizados do sistema de gestão
  */
 
@@ -8,9 +8,17 @@
     backdrop-filter: blur(4px); 
 }
 
+html.dark .loading-overlay {
+    background: rgba(15, 23, 42, 0.95);
+}
+
 /* Garante visibilidade do ícone de calendário em inputs date */
 input[type="date"]::-webkit-calendar-picker-indicator { 
     opacity: 100; 
+}
+
+html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
 }
 
 /* Esconde a seta padrão de datalist dos navegadores (mantém só a seta customizada) */
@@ -34,10 +42,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer; 
 }
 
+html.dark .table-row:hover {
+    background-color: #1e293b;
+}
+
 /* Input alternativo (para cadastro de novos itens nos selects) */
 .switched-input { 
     border-color: #2563eb; 
     background-color: #eff6ff; 
+}
+
+html.dark .switched-input {
+    background-color: #1e1b4b;
 }
 
 /* Estilos de Formulário */
@@ -52,6 +68,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-bottom: 1px solid #e2e8f0; 
 }
 
+html.dark .form-section-title {
+    color: #94a3b8;
+    border-color: #334155;
+}
+
 .input-field { 
     width: 100%; 
     border-radius: 0.5rem; 
@@ -59,6 +80,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding: 0.625rem; 
     font-size: 0.875rem; 
     transition: all 0.2s; 
+    background-color: #ffffff;
+    color: #334155;
+}
+
+html.dark .input-field {
+    background-color: #1e293b;
+    border-color: #475569;
+    color: #f8fafc;
 }
 
 .input-field:focus { 
@@ -75,6 +104,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     margin-bottom: 0.25rem; 
 }
 
+html.dark .label-field {
+    color: #cbd5e1;
+}
+
 /* Estilos para o Gráfico de Torre Humano (Dashboard) */
 .gender-tower { 
     width: 60px; 
@@ -86,6 +119,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: flex; 
     align-items: flex-end; 
     justify-content: center; 
+}
+
+html.dark .gender-tower {
+    background: #334155;
 }
 
 .gender-fill { 

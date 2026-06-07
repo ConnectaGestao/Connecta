@@ -331,7 +331,7 @@ function imprimirFicha() {
                 <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
                         <span style="${styleLabel}">Data Nasc.</span>
-                        <div style="${styleValue}">${p.nascimento ? p.nascimento.split('-').reverse().join('/') : '-'}</div>
+                        <div style="${styleValue}">${p.nascimento ? p.nascimento.split('-').reverse().join('/') + ' (' + (window.calcularIdade ? window.calcularIdade(p.nascimento) : '') + ')' : '-'}</div>
                     </div>
                     <div style="flex: 1;">
                         <span style="${styleLabel}">RG</span>
@@ -594,6 +594,8 @@ async function verHistoricoCompleto(p) {
     const btnHistDelete = document.getElementById('btn-hist-delete');
     if(btnHistDelete && typeof currentUserRole !== 'undefined') {
         btnHistDelete.classList.toggle('hidden', currentUserRole !== 'ADMIN');
+        btnHistDelete.setAttribute('data-id', p.id || '');
+        btnHistDelete.setAttribute('data-cpf', p.cpf || '');
     }
 
     window.historicoAtualCache = [];
@@ -627,8 +629,14 @@ async function verHistoricoCompleto(p) {
 
         divDetalhes.innerHTML = `
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Cadastrado em</span> <span class="font-medium text-slate-800 text-xs">${dataCriacao}</span></div>
-            <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Nasc.</span> <span class="font-medium text-slate-800">${p.nascimento ? p.nascimento.split('-').reverse().join('/') : '-'}</span></div>
+            <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Nasc.</span> <span class="font-medium text-slate-800">${p.nascimento ? p.nascimento.split('-').reverse().join('/') + ' (' + (window.calcularIdade ? window.calcularIdade(p.nascimento) : '') + ')' : '-'}</span></div>
             <div><span class="block text-xs font-bold text-slate-400 uppercase">RG</span> <span class="font-medium text-slate-800">${p.rg || '-'}</span></div>
+            
+            ${p.nome_social ? `<div><span class="block text-xs font-bold text-slate-400 uppercase">Nome Social</span> <span class="font-medium text-slate-800">${p.nome_social}</span></div>` : ''}
+            ${p.conjuge ? `<div><span class="block text-xs font-bold text-slate-400 uppercase">Cônjuge</span> <span class="font-medium text-slate-800">${p.conjuge}</span></div>` : ''}
+            ${p.profissao ? `<div><span class="block text-xs font-bold text-slate-400 uppercase">Profissão</span> <span class="font-medium text-slate-800">${p.profissao}</span></div>` : ''}
+            ${p.cargo_eclesiastico ? `<div><span class="block text-xs font-bold text-slate-400 uppercase">Cargo Ecles.</span> <span class="font-medium text-slate-800">${p.cargo_eclesiastico}</span></div>` : ''}
+            ${p.prontuario ? `<div><span class="block text-xs font-bold text-slate-400 uppercase">Nº Prontuário</span> <span class="font-medium text-slate-800 font-mono text-emerald-700">${p.prontuario}</span></div>` : ''}
             
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Município</span> <span class="font-medium text-slate-800">${municipio}</span></div>
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Bairro</span> <span class="font-medium text-slate-800">${bairro}</span></div>
@@ -638,7 +646,9 @@ async function verHistoricoCompleto(p) {
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Zona/Seção</span> <span class="font-medium text-slate-800">${p.zona || '-'}/${p.secao || '-'}</span></div>
             <div><span class="block text-xs font-bold text-slate-400 uppercase">Família</span> <span class="font-medium text-slate-800">${p.familia || '-'}</span></div>
             
+            ${p.parentes ? `<div class="md:col-span-3 mt-2 pt-2 border-t border-slate-100"><span class="block text-xs font-bold text-slate-400 uppercase">Vínculos Familiares</span> <p class="text-slate-800 whitespace-pre-line text-sm">${p.parentes}</p></div>` : ''}
             ${p.obs ? `<div class="md:col-span-3 mt-2 pt-2 border-t border-slate-100"><span class="block text-xs font-bold text-slate-400 uppercase">Observações</span> <p class="italic text-slate-600">${p.obs}</p></div>` : ''}
+            ${p.documentos_link ? `<div class="md:col-span-3 mt-2 pt-2 border-t border-slate-100"><span class="block text-xs font-bold text-slate-400 uppercase mb-2">Documentos Anexos</span> <a href="${p.documentos_link}" target="_blank" class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 font-bold py-2 px-4 rounded-lg transition text-sm"><i data-lucide="external-link" class="w-4 h-4"></i> Acessar Pasta de Documentos</a></div>` : ''}
         `;
 
         if (todosAtendimentos.length === 0 && typeof carregarListaAtendimentos === 'function') {
@@ -705,10 +715,19 @@ async function verHistoricoCompleto(p) {
                                     <span class="text-[10px] font-bold text-blue-400 uppercase block">Marcado Para</span>
                                     <span class="font-bold text-blue-800">${at.data_marcacao.split('-').reverse().join('/')}</span>
                                 </div>` : ''}
+                                ${at.data_conclusao ? `
+                                <div class="col-span-2 sm:col-span-1 bg-emerald-50 p-2 rounded border border-emerald-100 mt-2">
+                                    <span class="text-[10px] font-bold text-emerald-600 uppercase block">Conclusão / Prazo</span>
+                                    <span class="font-bold text-emerald-800">${at.data_conclusao.split('-').reverse().join('/')} <span class="text-xs ml-1 text-emerald-600">(${Math.ceil((new Date(at.data_conclusao) - new Date(at.data_abertura)) / (1000 * 60 * 60 * 24))} dias)</span></span>
+                                </div>` : ''}
                                 ${at.obs_atendimento ? `
                                 <div class="col-span-2 mt-2 pt-2 border-t border-slate-100">
                                     <span class="text-[10px] font-bold text-slate-400 uppercase block">Observações</span>
                                     <p class="text-slate-500 italic text-xs line-clamp-2">${at.obs_atendimento}</p>
+                                </div>` : ''}
+                                ${at.anexos_link ? `
+                                <div class="col-span-2 mt-2 pt-2 border-t border-slate-100">
+                                    <a href="${at.anexos_link}" target="_blank" class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-1.5 px-3 rounded-lg transition text-xs"><i data-lucide="paperclip" class="w-3 h-3"></i> Anexos do Atendimento</a>
                                 </div>` : ''}
                             </div>
                             <div class="text-xs text-slate-400 mt-3 flex justify-end items-center gap-1 group-hover:text-blue-500 transition-colors">
@@ -869,7 +888,8 @@ async function gerarListagem() {
                     list.sort((a,b) => a.nascimento.split('-')[2].localeCompare(b.nascimento.split('-')[2]));
                     html += `<tr class="bg-indigo-50"><td colspan="5" class="px-6 py-3 font-bold text-indigo-800 text-center uppercase">${mesesNomes[mesStr]} ${anoAtual} - ${list.length} pessoas fazem aniversário neste mês</td></tr>`;
                     list.forEach(p => {
-                        const dataFmt = p.nascimento.split('-').reverse().join('/');
+                        let dataFmt = p.nascimento.split('-').reverse().join('/');
+                        if (window.calcularIdade) dataFmt += ` (${window.calcularIdade(p.nascimento)})`;
                         const diaAniv = parseInt(p.nascimento.split('-')[2]);
                         
                         let statusHtml = '';
@@ -911,7 +931,8 @@ async function gerarListagem() {
             }
             
             list.forEach(p => {
-                const dataFmt = p.nascimento.split('-').reverse().join('/');
+                let dataFmt = p.nascimento.split('-').reverse().join('/');
+                if (window.calcularIdade) dataFmt += ` (${window.calcularIdade(p.nascimento)})`;
                 const diaAniv = parseInt(p.nascimento.split('-')[2]);
                 const mesAniv = parseInt(mes);
                 
@@ -1140,7 +1161,7 @@ function imprimirFichaCadastro() {
                 </td>
                 <td style="width: 40%;">
                     <span style="${styleLabel}">Data de Nascimento</span>
-                    <span style="${styleData}">${fmtData(p.nascimento)}</span>
+                    <span style="${styleData}">${fmtData(p.nascimento)} ${p.nascimento && window.calcularIdade ? '(' + window.calcularIdade(p.nascimento) + ')' : ''}</span>
                 </td>
             </tr>
             <tr>

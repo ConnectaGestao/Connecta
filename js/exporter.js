@@ -44,6 +44,7 @@ async function exportarExcel() {
 
         const dadosPacientes = pacientes.map(p => ({
             "Nome Completo": p.nome || '',
+            "Nome Social": p.nome_social || '',
             "Referência": p.apelido || '',
             "CPF": p.cpf || '',
             "RG": p.rg || '',
@@ -53,6 +54,11 @@ async function exportarExcel() {
             "Telefone 1 (WhatsApp)": p.tel1 || '',
             "Telefone 2": p.tel2 || '',
             "Família": p.familia || '',
+            "Cônjuge": p.conjuge || '',
+            "Profissão": p.profissao || '',
+            "Cargo Eclesiástico": p.cargo_eclesiastico || '',
+            "Vínculos Familiares": p.parentes || '',
+            "Nº Prontuário": p.prontuario || '',
             "Indicação (Liderança)": p.indicacao || '',
             "É Liderança?": p.lideranca === 'SIM' ? 'SIM' : 'NÃO',
             "Filiação (Mãe/Pai)": p.filiacao || '',
@@ -84,7 +90,7 @@ async function exportarExcel() {
             "UBS de Origem": a.ubs || '',
             "Data Marcada (Consulta)": formatarData(a.data_marcacao),
             "Data de Risco": formatarData(a.data_risco),
-            "Prontuário (HO)": a.prontuario || '',
+            "Nº Prontuário (Paciente)": a.prontuario || '', // It will still export if legacy data exists
             "Observações": a.observacao || ''
         }));
 

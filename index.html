@@ -14,6 +14,11 @@
     
     <!-- BIBLIOTECAS EXTERNAS (CDNs mantêm cache normal) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -31,11 +36,11 @@
         document.write('<link rel="stylesheet" href="css/style.css?v=' + Date.now() + '">');
     </script>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans flex text-slate-800">
+<body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans flex text-slate-800 dark:text-slate-100">
 
     <!-- TELA DE LOGIN -->
     <div id="view-login" class="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden fade-in">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden fade-in">
             <div class="bg-blue-600 p-8 text-center">
                 <i data-lucide="activity" class="w-16 h-16 text-white mx-auto mb-4"></i>
                 <h1 class="text-2xl font-bold text-white">Connecta</h1>
@@ -47,12 +52,12 @@
                 <div id="form-login">
                     <form onsubmit="event.preventDefault(); efetuarLogin();" class="space-y-4" autocomplete="off">
                         <div>
-                            <label class="block text-slate-700 text-sm font-bold mb-2">E-mail</label>
-                            <input type="email" id="login_email" autocomplete="off" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm text-slate-900 caret-blue-600" placeholder="seu@email.com">
+                            <label class="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">E-mail</label>
+                            <input type="email" id="login_email" autocomplete="off" class="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm text-slate-900 caret-blue-600" placeholder="seu@email.com">
                         </div>
                         <div>
-                            <label class="block text-slate-700 text-sm font-bold mb-2">Senha</label>
-                            <input type="password" id="login_senha" autocomplete="new-password" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm text-slate-900 caret-blue-600" placeholder="••••••••">
+                            <label class="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">Senha</label>
+                            <input type="password" id="login_senha" autocomplete="new-password" class="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm text-slate-900 caret-blue-600" placeholder="••••••••">
                         </div>
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl flex justify-center items-center gap-2">
                             <span>Entrar</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -67,16 +72,16 @@
                 </div>
 
                 <div id="form-recuperar" class="hidden">
-                    <p class="text-sm text-slate-600 mb-4">Digite seu e-mail para receber um link de redefinição de senha.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">Digite seu e-mail para receber um link de redefinição de senha.</p>
                     <div class="mb-4">
-                        <label class="block text-slate-700 text-sm font-bold mb-2">E-mail</label>
-                        <input type="email" id="recuperar_email" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm text-slate-900 caret-blue-600" placeholder="seu@email.com">
+                        <label class="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">E-mail</label>
+                        <input type="email" id="recuperar_email" class="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm text-slate-900 caret-blue-600" placeholder="seu@email.com">
                     </div>
                     <button onclick="recuperarSenha()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg flex justify-center items-center gap-2 mb-2">
                         Enviar Link de Recuperação
                     </button>
                     <div class="text-center">
-                        <button onclick="toggleRecuperarSenha()" class="text-sm text-slate-500 hover:text-slate-700">Voltar para Login</button>
+                        <button onclick="toggleRecuperarSenha()" class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200">Voltar para Login</button>
                     </div>
                 </div>
             </div>
@@ -95,39 +100,52 @@
             <div class="flex justify-between items-end">
                 <div>
                     <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Sistema de Gestão</p>
-                    <p class="text-[10px] text-slate-500" id="user-role-display">Carregando...</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400" id="user-role-display">Carregando...</p>
                 </div>
                 <button onclick="logout()" class="text-xs text-red-400 hover:text-red-300 border border-red-900 bg-red-900/20 px-2 py-1 rounded">Sair</button>
             </div>
         </div>
 
-        <nav class="flex-1 p-4 space-y-1">
-            <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+        <nav class="flex-1 px-3 py-2 space-y-0 overflow-y-auto overflow-x-hidden">
+            <button onclick="switchTab('dashboard')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="layout-dashboard" class="w-5 h-5 group-hover:text-blue-400"></i> Dashboard
             </button>
-            <button onclick="switchTab('lista-pacientes')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+            <button onclick="switchTab('lista-pacientes')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="users" class="w-5 h-5 group-hover:text-blue-400"></i> Munícipes
             </button>
-            <button onclick="switchTab('aniversariantes')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+            <button onclick="switchTab('aniversariantes')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="gift" class="w-5 h-5 group-hover:text-pink-400"></i> Aniversariantes
             </button>
-            <button onclick="switchTab('lista-atendimentos')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+            <button onclick="switchTab('agenda')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
+                <i data-lucide="calendar" class="w-5 h-5 group-hover:text-amber-400"></i> Agenda
+            </button>
+            
+            <button onclick="switchTab('campanhas')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
+                <i data-lucide="message-square" class="w-4 h-4 group-hover:text-emerald-400"></i> Campanhas (Whats)
+            </button>
+<button onclick="switchTab('lista-atendimentos')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="list" class="w-5 h-5 group-hover:text-blue-400"></i> Atendimentos
             </button>
-            <button onclick="switchTab('relatorios')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+            <button onclick="switchTab('relatorios')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="alert-triangle" class="w-5 h-5 group-hover:text-red-400"></i> Relatórios
             </button>
-            <button onclick="switchTab('listagens')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+            <button onclick="switchTab('listagens')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="printer" class="w-5 h-5 group-hover:text-indigo-400"></i> Listagens
             </button>
-            <button onclick="switchTab('parceiros')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group">
+            <button onclick="switchTab('parceiros')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="handshake" class="w-5 h-5 group-hover:text-emerald-400"></i> Parceiros
             </button>
-            <button id="nav-export" onclick="switchTab('exportacao')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group hidden">
+            <button id="nav-export" onclick="switchTab('exportacao')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group hidden">
                 <i data-lucide="download-cloud" class="w-5 h-5 group-hover:text-blue-400"></i> Exportar Excel
             </button>
-            <button id="nav-admin" onclick="switchTab('admin-panel')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition flex items-center gap-3 text-slate-300 hover:text-white group hidden">
+            <button id="nav-admin" onclick="switchTab('admin-panel')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group hidden">
                 <i data-lucide="shield" class="w-5 h-5 group-hover:text-yellow-400"></i> Admin
+            </button>
+            <button onclick="toggleDarkMode()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group mt-4">
+                <i data-lucide="moon" class="w-5 h-5 group-hover:text-indigo-400 dark:hidden"></i>
+                <i data-lucide="sun" class="w-5 h-5 group-hover:text-orange-400 hidden dark:block"></i>
+                <span class="dark:hidden">Modo Escuro</span>
+                <span class="hidden dark:inline">Modo Claro</span>
             </button>
         </nav>
 
@@ -135,9 +153,10 @@
             <button onclick="switchTab('form-paciente')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow-lg mb-2 flex items-center justify-center gap-2">
                 <i data-lucide="plus"></i> Novo Munícipe
             </button>
-            <button onclick="switchTab('form-atendimento')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold shadow-lg flex items-center justify-center gap-2">
+            <button onclick="switchTab('form-atendimento')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold shadow-lg mb-2 flex items-center justify-center gap-2">
                 <i data-lucide="plus"></i> Atendimento
             </button>
+
         </div>
     </aside>
 
@@ -146,40 +165,41 @@
         <div>
             <div class="font-bold flex items-center gap-2 text-blue-400"><i data-lucide="database"></i> Connecta</div>
         </div>
-        <div class="flex gap-4">
+        <div class="flex gap-3 items-center">
+            <button onclick="toggleDarkMode()" class="text-slate-300 p-1"><i data-lucide="moon" class="dark-mode-icon w-5 h-5"></i></button>
             <button onclick="logout()" class="text-xs text-red-400 border border-red-900 px-2 py-1 rounded">Sair</button>
             <button onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('flex');" class="text-white"><i data-lucide="menu"></i></button>
         </div>
     </div>
 
     <!-- CONTEÚDO PRINCIPAL -->
-    <main class="flex-1 md:ml-64 p-6 pt-20 md:pt-6 bg-slate-100 min-h-screen">
+    <main class="flex-1 md:ml-64 p-6 pt-20 md:pt-6 bg-slate-100 dark:bg-slate-950 min-h-screen">
         <div id="system-message" class="hidden mb-6 p-4 rounded-lg border text-sm break-words shadow-sm"></div>
 
         <!-- DASHBOARD -->
         <div id="view-dashboard" class="hidden fade-in">
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold text-slate-800">Dashboard Analítico</h2>
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Dashboard Analítico</h2>
                 
-                <div class="flex flex-wrap gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+                <div class="flex flex-wrap gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
                     <select id="dash-modo" onchange="aplicarFiltrosDashboard()" class="text-sm bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 rounded px-2 py-1">
                         <option value="municipe">Modo: Munícipe</option>
                         <option value="atendimento">Modo: Atendimento</option>
                     </select>
-                    <select id="dash-filter-status" onchange="aplicarFiltrosDashboard()" class="text-sm bg-slate-50 border border-slate-300 rounded px-2 py-1">
+                    <select id="dash-filter-status" onchange="aplicarFiltrosDashboard()" class="text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded px-2 py-1">
                         <option value="">Status: Todos</option>
                         <option value="PENDENTE">Pendentes</option>
                         <option value="CONCLUIDO">Concluídos</option>
                         <option value="CANCELADO">Cancelados</option>
                     </select>
-                    <select id="dash-filter-mes" onchange="aplicarFiltrosDashboard()" class="text-sm bg-slate-50 border border-slate-300 rounded px-2 py-1">
+                    <select id="dash-filter-mes" onchange="aplicarFiltrosDashboard()" class="text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded px-2 py-1">
                         <option value="">Mês: Todos</option>
                         <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                         <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
                         <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                         <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                     </select>
-                    <select id="dash-filter-ano" onchange="aplicarFiltrosDashboard()" class="text-sm bg-slate-50 border border-slate-300 rounded px-2 py-1">
+                    <select id="dash-filter-ano" onchange="aplicarFiltrosDashboard()" class="text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded px-2 py-1">
                         <option value="">Ano: Todos</option>
                     </select>
                     <button onclick="loadDashboard()" class="bg-blue-600 text-white p-1 rounded hover:bg-blue-700"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
@@ -187,56 +207,56 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <div class="flex justify-between items-start">
-                        <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Total Munícipes</p><h3 class="text-3xl font-bold text-slate-800 mt-1" id="dash-pacientes">-</h3></div>
+                        <div><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Total Munícipes</p><h3 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1" id="dash-pacientes">-</h3></div>
                         <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i data-lucide="users" class="w-6 h-6"></i></div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <div class="flex justify-between items-start">
-                        <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Atendimentos (Filtro)</p><h3 class="text-3xl font-bold text-emerald-600 mt-1" id="dash-mes">-</h3></div>
+                        <div><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Atendimentos (Filtro)</p><h3 class="text-3xl font-bold text-emerald-600 mt-1" id="dash-mes">-</h3></div>
                         <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600"><i data-lucide="calendar" class="w-6 h-6"></i></div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <div class="flex justify-between items-start">
-                        <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Pendentes (Atual)</p><h3 class="text-3xl font-bold text-orange-600 mt-1" id="dash-pendentes">-</h3></div>
+                        <div><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Pendentes (Atual)</p><h3 class="text-3xl font-bold text-orange-600 mt-1" id="dash-pendentes">-</h3></div>
                         <div class="p-2 bg-orange-50 rounded-lg text-orange-600"><i data-lucide="clock" class="w-6 h-6"></i></div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <div class="flex justify-between items-start">
-                        <div><p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Média Espera (Dias)</p><h3 class="text-3xl font-bold text-slate-800 mt-1" id="dash-tempo-espera">-</h3></div>
-                        <div class="p-2 bg-slate-100 rounded-lg text-slate-600"><i data-lucide="timer" class="w-6 h-6"></i></div>
+                        <div><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Média Espera (Dias)</p><h3 class="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1" id="dash-tempo-espera">-</h3></div>
+                        <div class="p-2 bg-slate-100 dark:bg-slate-950 rounded-lg text-slate-600 dark:text-slate-300"><i data-lucide="timer" class="w-6 h-6"></i></div>
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-6 w-full text-center border-b pb-2">Distribuição por Sexo</h3>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-6 w-full text-center border-b pb-2">Distribuição por Sexo</h3>
                     <div class="flex gap-8 items-end">
                         <div class="flex flex-col items-center gap-2">
                             <span class="font-bold text-blue-600 text-lg" id="val-masc">0</span>
-                            <div class="gender-tower bg-slate-100">
+                            <div class="gender-tower bg-slate-100 dark:bg-slate-950">
                                 <div id="tower-masc" class="gender-fill bg-blue-500"></div>
                             </div>
-                            <span class="text-xs font-bold text-slate-500">MASC</span>
+                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">MASC</span>
                         </div>
                         <div class="flex flex-col items-center gap-2">
                             <span class="font-bold text-pink-500 text-lg" id="val-fem">0</span>
-                            <div class="gender-tower bg-slate-100">
+                            <div class="gender-tower bg-slate-100 dark:bg-slate-950">
                                 <div id="tower-fem" class="gender-fill bg-pink-500"></div>
                             </div>
-                            <span class="text-xs font-bold text-slate-500">FEM</span>
+                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">FEM</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <div class="flex justify-between items-center mb-4 border-b pb-2">
-                        <h3 class="text-sm font-bold text-slate-600 uppercase">Situação do Título</h3>
+                        <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase">Situação do Título</h3>
                         <div class="flex gap-1">
                             <button onclick="abrirRelatorioEleitoral()" class="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1 rounded hover:bg-blue-100 transition font-bold flex items-center gap-1">
                                 <i data-lucide="list" class="w-3 h-3"></i> Ver Relatório
@@ -249,8 +269,8 @@
                     <p class="text-[10px] text-center text-slate-400 mt-2">Clique nas barras para ver detalhes</p>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center gap-4">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-2 w-full text-center border-b pb-2">Eficiência</h3>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-center gap-4">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-2 w-full text-center border-b pb-2">Eficiência</h3>
                     <div class="text-center">
                         <p class="text-xs text-slate-400 uppercase">Abertura até Marcação</p>
                         <p class="text-3xl font-bold text-emerald-600" id="dash-tempo-marcacao">-</p>
@@ -266,20 +286,20 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4">Especialidades (Top 10)</h3>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4">Especialidades (Top 10)</h3>
                     <canvas id="chartEspecialidade"></canvas>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4">Procedimentos (Top 10)</h3>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4">Procedimentos (Top 10)</h3>
                     <canvas id="chartProcedimento"></canvas>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4">Locais de Atendimento</h3>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4">Locais de Atendimento</h3>
                     <canvas id="chartLocal"></canvas>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4">Tipos de Serviço</h3>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4">Tipos de Serviço</h3>
                     <canvas id="chartTipo"></canvas>
                 </div>
             </div>
@@ -288,9 +308,9 @@
         <!-- LISTA PACIENTES (MUNÍCIPES) -->
         <!-- TELA DE ANIVERSARIANTES -->
         <div id="view-aniversariantes" class="hidden fade-in space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><i data-lucide="gift" class="text-pink-500 w-7 h-7"></i> Aniversariantes</h2>
-                <div class="text-sm text-slate-500">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="gift" class="text-pink-500 w-7 h-7"></i> Aniversariantes</h2>
+                <div class="text-sm text-slate-500 dark:text-slate-400">
                     Acompanhe os aniversários de hoje, recentes e dos próximos 7 dias.
                 </div>
             </div>
@@ -305,8 +325,8 @@
                 </div>
 
                 <!-- COLUNA: RECENTES -->
-                <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col">
-                    <h3 class="text-lg font-bold text-slate-700 flex items-center gap-2 mb-4 border-b border-slate-200 pb-2"><i data-lucide="clock" class="w-5 h-5 text-slate-400"></i> Últimos 2 dias</h3>
+                <div class="bg-slate-50 dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 flex flex-col">
+                    <h3 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-slate-700 pb-2"><i data-lucide="clock" class="w-5 h-5 text-slate-400"></i> Últimos 2 dias</h3>
                     <div id="lista-aniv-recentes" class="space-y-3 flex-1 flex flex-col">
                         <div class="text-center text-slate-400 text-sm italic my-auto py-8">Carregando...</div>
                     </div>
@@ -322,20 +342,20 @@
             </div>
 
             <!-- RELATÓRIO MENSAL DE ANIVERSARIANTES -->
-            <div class="pt-6 border-t border-slate-200">
+            <div class="pt-6 border-t border-slate-200 dark:border-slate-700">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                    <h3 class="text-xl font-bold text-slate-800"><i data-lucide="list-filter" class="w-5 h-5 inline text-slate-400"></i> Relatório Mensal Completo</h3>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100"><i data-lucide="list-filter" class="w-5 h-5 inline text-slate-400"></i> Relatório Mensal Completo</h3>
                     <div class="flex items-center gap-2 w-full md:w-auto">
-                        <span class="text-sm font-bold text-slate-500">Mês:</span>
-                        <select id="filtro-niver-mes" onchange="carregarAniversarios()" class="flex-1 md:w-48 text-sm font-bold border border-pink-200 rounded-lg py-2 px-3 bg-white text-pink-700 focus:outline-none focus:border-pink-500 shadow-sm">
+                        <span class="text-sm font-bold text-slate-500 dark:text-slate-400">Mês:</span>
+                        <select id="filtro-niver-mes" onchange="carregarAniversarios()" class="flex-1 md:w-48 text-sm font-bold border border-pink-200 rounded-lg py-2 px-3 bg-white dark:bg-slate-800 text-pink-700 focus:outline-none focus:border-pink-500 shadow-sm">
                             <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                             <thead class="bg-pink-50 text-pink-900 uppercase font-bold text-xs border-b border-pink-100">
                                 <tr><th class="px-6 py-4">Data Nasc.</th><th class="px-6 py-4">Nome</th><th class="px-6 py-4">Telefone</th><th class="px-6 py-4">Bairro</th><th class="px-6 py-4">Status</th></tr>
                             </thead>
@@ -347,15 +367,15 @@
         </div>
 
         <div id="view-lista-pacientes" class="hidden fade-in">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 pb-4">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800">Munícipes</h2>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Munícipes</h2>
                 </div>
                 
                 <div id="container-busca-pacientes" class="flex gap-2 w-full md:w-auto items-center">
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] font-bold text-slate-400 uppercase hidden md:inline">Mostrar:</span>
-                        <select id="paginacao-pacientes-tamanho" onchange="mudarTamanhoPaginaPacientes(this.value)" class="text-sm border border-slate-300 rounded-lg py-2 px-2 bg-white text-slate-600 focus:outline-none focus:border-blue-500">
+                        <select id="paginacao-pacientes-tamanho" onchange="mudarTamanhoPaginaPacientes(this.value)" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg py-2 px-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:outline-none focus:border-blue-500">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -363,22 +383,23 @@
                         </select>
                     </div>
                     <div class="relative flex-1 md:w-64">
-                        <input type="text" id="filtro-paciente-input" onkeyup="filtrarPacientesNaTela()" placeholder="Buscar nome, CPF, cidade..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none bg-white">
+                        <input type="text" id="filtro-paciente-input" onkeyup="filtrarPacientesNaTela()" placeholder="Buscar nome, CPF, cidade..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-800">
                         <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
                     </div>
-                    <button onclick="carregarListaPacientes()" class="text-blue-600 hover:text-blue-800 bg-white px-3 py-2 rounded border shadow-sm hover:shadow transition"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                    <button id="btn-detector-duplicidade" onclick="abrirDetectorDuplicidade()" class="hidden text-amber-600 hover:text-amber-800 bg-amber-50 px-3 py-2 rounded border border-amber-200 shadow-sm hover:shadow transition" title="Detector de Duplicidades"><i data-lucide="scan-face" class="w-4 h-4"></i></button>
+                    <button onclick="carregarListaPacientes()" class="text-blue-600 hover:text-blue-800 bg-white dark:bg-slate-800 px-3 py-2 rounded border shadow-sm hover:shadow transition" title="Atualizar Lista"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
                 </div>
 
             </div>
 
             <div id="subview-pacientes-lista">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-xs border-b border-slate-200">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                            <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-xs border-b border-slate-200 dark:border-slate-700">
                                 <tr><th class="px-6 py-4">Nome</th><th class="px-6 py-4">CPF</th><th class="px-6 py-4 hidden sm:table-cell">Telefone</th><th class="px-6 py-4 hidden md:table-cell">Município</th><th class="px-6 py-4 text-right">Ações</th></tr>
                             </thead>
-                            <tbody id="tabela-pacientes-body" class="divide-y divide-slate-100"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Carregando...</td></tr></tbody>
+                            <tbody id="tabela-pacientes-body" class="divide-y divide-slate-100 dark:divide-slate-800"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Carregando...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -399,12 +420,12 @@
         <!-- LISTA ATENDIMENTOS -->
         <div id="view-lista-atendimentos" class="hidden fade-in">
             <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
-                <div><h2 class="text-2xl font-bold text-slate-800">Atendimentos</h2><p class="text-slate-500 text-sm">Histórico</p></div>
+                <div><h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Atendimentos</h2><p class="text-slate-500 dark:text-slate-400 text-sm">Histórico</p></div>
                 <!-- NOVO: CAMPO DE BUSCA EM ATENDIMENTOS -->
                 <div class="flex flex-wrap gap-2 items-center w-full md:w-auto">
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] font-bold text-slate-400 uppercase hidden md:inline">Mostrar:</span>
-                        <select id="paginacao-atendimentos-tamanho" onchange="mudarTamanhoPaginaAtendimentos(this.value)" class="text-sm border border-slate-300 rounded-lg py-1.5 px-2 bg-white text-slate-600 focus:outline-none focus:border-blue-500">
+                        <select id="paginacao-atendimentos-tamanho" onchange="mudarTamanhoPaginaAtendimentos(this.value)" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg py-1.5 px-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:outline-none focus:border-blue-500">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -412,22 +433,22 @@
                         </select>
                     </div>
                     <div class="relative flex-1 md:w-48">
-                        <input type="text" id="filtro-atendimento-input" onkeyup="filtrarAtendimentos()" placeholder="Buscar..." class="w-full pl-8 pr-2 py-1.5 rounded-lg border border-slate-300 focus:border-blue-500 text-sm">
+                        <input type="text" id="filtro-atendimento-input" onkeyup="filtrarAtendimentos()" placeholder="Buscar..." class="w-full pl-8 pr-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 focus:border-blue-500 text-sm">
                         <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400"></i>
                     </div>
-                    <div class="flex gap-2 items-center bg-white p-1 rounded-lg border shadow-sm">
-                        <select id="filtro-status" onchange="filtrarAtendimentos()" class="text-sm border-slate-300 rounded-md border p-1.5 font-medium bg-slate-50"><option value="">Status</option><option value="PENDENTE">Pendente</option><option value="CONCLUIDO">Concluído</option></select>
-                        <select id="filtro-mes" onchange="filtrarAtendimentos()" class="text-sm border-slate-300 rounded-md border p-1.5 bg-slate-50"><option value="">Mês</option></select>
-                        <select id="filtro-ano" onchange="filtrarAtendimentos()" class="text-sm border-slate-300 rounded-md border p-1.5 bg-slate-50"><option value="">Ano</option></select>
+                    <div class="flex gap-2 items-center bg-white dark:bg-slate-800 p-1 rounded-lg border shadow-sm">
+                        <select id="filtro-status" onchange="filtrarAtendimentos()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 font-medium bg-slate-50 dark:bg-slate-900"><option value="">Status</option><option value="PENDENTE">Pendente</option><option value="CONCLUIDO">Concluído</option></select>
+                        <select id="filtro-mes" onchange="filtrarAtendimentos()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 bg-slate-50 dark:bg-slate-900"><option value="">Mês</option></select>
+                        <select id="filtro-ano" onchange="filtrarAtendimentos()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 bg-slate-50 dark:bg-slate-900"><option value="">Ano</option></select>
                         <button onclick="carregarListaAtendimentos()" class="text-blue-600 hover:bg-blue-50 p-2 rounded border border-transparent hover:border-blue-100"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
+                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                         <!-- HEADER DA TABELA ATUALIZADO (NOVAS COLUNAS) -->
-                        <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-xs border-b border-slate-200">
+                        <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-xs border-b border-slate-200 dark:border-slate-700">
                             <tr>
                                 <th class="px-4 py-4">Data</th>
                                 <th class="px-4 py-4">Munícipe</th>
@@ -438,7 +459,7 @@
                                 <th class="px-4 py-4 text-right">Ação</th>
                             </tr>
                         </thead>
-                        <tbody id="tabela-atendimentos-body" class="divide-y divide-slate-100"><tr><td colspan="7" class="px-6 py-8 text-center text-slate-400">Carregando...</td></tr></tbody>
+                        <tbody id="tabela-atendimentos-body" class="divide-y divide-slate-100 dark:divide-slate-800"><tr><td colspan="7" class="px-6 py-8 text-center text-slate-400">Carregando...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -454,44 +475,49 @@
 
         <!-- MODAL DETALHE ATENDIMENTO -->
         <div id="modal-backdrop-detalhe" class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-            <div id="view-detalhe-atendimento" class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden max-h-[90vh] flex flex-col transform transition-all">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="file-text" class="text-blue-600 w-5 h-5"></i> Detalhes do Atendimento</h2>
-                    <button onclick="fecharDetalhe()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <div id="view-detalhe-atendimento" class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-3xl overflow-hidden max-h-[90vh] flex flex-col transform transition-all">
+                <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center shrink-0">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="file-text" class="text-blue-600 w-5 h-5"></i> Detalhes do Atendimento</h2>
+                    <button onclick="fecharDetalhe()" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 transition"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
                 <div class="p-6 md:p-8 overflow-y-auto">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                         <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100 flex justify-between items-center">
                             <div>
                                 <span class="block text-xs font-bold text-blue-500 uppercase tracking-wide">Munícipe</span>
-                                <span class="text-lg font-bold text-slate-800" id="det-paciente">-</span>
-                                <span class="text-slate-500 text-xs ml-2" id="det-cpf">CPF: -</span>
+                                <span class="text-lg font-bold text-slate-800 dark:text-slate-100" id="det-paciente">-</span>
+                                <span class="text-slate-500 dark:text-slate-400 text-xs ml-2" id="det-cpf">CPF: -</span>
                             </div>
                             <div class="text-right">
                                 <span class="block text-xs font-bold text-blue-500 uppercase tracking-wide">Status</span>
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-white border shadow-sm" id="det-status">PENDENTE</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-white dark:bg-slate-800 border shadow-sm" id="det-status">PENDENTE</span>
                             </div>
                         </div>
                         
-                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Abertura</span><span class="text-slate-800 font-medium" id="det-data">-</span></div>
-                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Tipo / Sub-tipo</span><span class="text-slate-800 font-medium" id="det-tipo">-</span></div>
+                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Abertura</span><span class="text-slate-800 dark:text-slate-100 font-medium" id="det-data">-</span></div>
+                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Tipo / Sub-tipo</span><span class="text-slate-800 dark:text-slate-100 font-medium" id="det-tipo">-</span></div>
                         
-                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Serviço/Especialidade</span><span class="text-slate-800 font-medium" id="det-servico">-</span></div>
-                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Local</span><span class="text-slate-800 font-medium" id="det-local">-</span></div>
+                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Serviço/Especialidade</span><span class="text-slate-800 dark:text-slate-100 font-medium" id="det-servico">-</span></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mt-4">
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Local</span><span class="text-slate-800 dark:text-slate-100 font-medium" id="det-local">-</span></div>
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Parceiro</span><span class="text-slate-800 dark:text-slate-100 font-medium" id="det-parceiro">-</span></div>
+                                
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Prioridade/Triagem</span><span class="text-slate-800 dark:text-slate-100 font-medium" id="det-prioridade">-</span></div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded border border-slate-100">
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Marcação</span><span class="text-slate-800 dark:text-slate-100 font-medium" id="det-marcacao">-</span></div>
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Risco</span><span class="text-red-600 font-bold" id="det-risco">-</span></div>
+                                <div><span class="block text-xs font-bold text-emerald-600 uppercase">Conclusão / Prazo</span><span class="text-emerald-700 font-bold" id="det-conclusao">-</span></div>
+                            </div>
                         
-                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Parceiro</span><span class="text-slate-800 font-medium" id="det-parceiro">-</span></div>
-                        
-                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Marcação</span><span class="text-slate-800 font-medium" id="det-marcacao">-</span></div>
-                        <div><span class="block text-xs font-bold text-slate-400 uppercase">Data Risco</span><span class="text-red-600 font-bold" id="det-risco">-</span></div>
-                        
-                        <div class="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+                        <div class="md:col-span-2 bg-slate-50 dark:bg-slate-900 p-4 rounded-lg">
                             <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Observações</span>
-                            <p class="text-slate-600 italic" id="det-obs">Sem observações.</p>
+                            <p class="text-slate-600 dark:text-slate-300 italic" id="det-obs">Sem observações.</p>
                         </div>
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">
-                        <button onclick="fecharDetalhe()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 font-medium">Fechar</button>
+                        <button onclick="fecharDetalhe()" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-900 font-medium">Fechar</button>
                         <!-- Botão Editar apenas para Admin (Via JS) -->
                         <button id="btn-editar-detalhe" class="btn-action px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2">
                             <i data-lucide="edit-3" class="w-4 h-4"></i> Editar Atendimento
@@ -503,26 +529,26 @@
 
         <!-- VIEW PARCEIROS -->
         <div id="view-parceiros" class="hidden fade-in">
-             <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 pb-6">
+             <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><i data-lucide="handshake" class="text-emerald-600"></i> Central de Parceiros & Liderança</h2>
-                    <p class="text-slate-500 text-sm">Gestão de produtividade e apoio político</p>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="handshake" class="text-emerald-600"></i> Central de Parceiros & Liderança</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Gestão de produtividade e apoio político</p>
                 </div>
-                <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-lg border shadow-sm w-full md:w-auto">
-                    <select id="parc-filter-status" onchange="initParceiros()" class="text-sm border-slate-300 rounded-md border p-1.5 font-medium bg-slate-50">
+                <div class="flex flex-wrap gap-2 items-center bg-white dark:bg-slate-800 p-2 rounded-lg border shadow-sm w-full md:w-auto">
+                    <select id="parc-filter-status" onchange="initParceiros()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 font-medium bg-slate-50 dark:bg-slate-900">
                         <option value="">Status: Todos</option>
                         <option value="PENDENTE">Pendentes</option>
                         <option value="CONCLUIDO">Concluídos</option>
                         <option value="CANCELADO">Cancelados</option>
                     </select>
-                    <select id="parc-filter-mes" onchange="initParceiros()" class="text-sm border-slate-300 rounded-md border p-1.5 bg-slate-50">
+                    <select id="parc-filter-mes" onchange="initParceiros()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 bg-slate-50 dark:bg-slate-900">
                         <option value="">Mês: Todos</option>
                         <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                         <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
                         <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                         <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                     </select>
-                    <select id="parc-filter-ano" onchange="initParceiros()" class="text-sm border-slate-300 rounded-md border p-1.5 bg-slate-50">
+                    <select id="parc-filter-ano" onchange="initParceiros()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 bg-slate-50 dark:bg-slate-900">
                         <option value="">Ano: Todos</option>
                     </select>
                     <button onclick="initParceiros()" class="text-emerald-600 hover:bg-emerald-50 p-2 rounded border border-transparent hover:border-emerald-100"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
@@ -530,19 +556,19 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4">Volume por Parceiro (Execução)</h3>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4">Volume por Parceiro (Execução)</h3>
                     <div class="h-80"><canvas id="chartParceirosRanking"></canvas></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4 flex justify-between items-center">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4 flex justify-between items-center">
                         <span>Desempenho Indicações</span>
-                        <span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 normal-case">Ordenado por Total Indicado</span>
+                        <span class="text-xs bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded text-slate-500 dark:text-slate-400 normal-case">Ordenado por Total Indicado</span>
                     </h3>
                     <div class="overflow-y-auto h-80 pr-2">
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm text-slate-600">
-                                <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-[10px] sticky top-0">
+                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-[10px] sticky top-0">
                                     <tr>
                                         <th class="px-2 py-2">Indicação</th>
                                         <th class="px-2 py-2 text-center text-blue-600">Pessoas</th>
@@ -552,55 +578,55 @@
                                         <th class="px-2 py-2 text-right">%</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabela-lideranca-body" class="divide-y divide-slate-100"></tbody>
+                                <tbody id="tabela-lideranca-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-                <h3 class="text-sm font-bold text-slate-600 uppercase mb-4">Procedimentos (Filtro Atual)</h3>
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-8">
+                <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4">Procedimentos (Filtro Atual)</h3>
                 <div class="h-64"><canvas id="chartProcedimentosGeral"></canvas></div>
             </div>
         </div>
 
         <!-- VIEW RELATÓRIOS -->
         <div id="view-relatorios" class="hidden fade-in">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 pb-6">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><i data-lucide="bar-chart-2" class="text-indigo-600"></i> Relatórios de Espera</h2>
-                    <p class="text-slate-500 text-sm">Análise de tempo médio de atendimento (em dias)</p>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="bar-chart-2" class="text-indigo-600"></i> Relatórios de Espera</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Análise de tempo médio de atendimento (em dias)</p>
                 </div>
-                <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-lg border shadow-sm w-full md:w-auto">
-                    <select id="rel-filter-status" onchange="atualizarGraficosRelatorios()" class="text-sm border-slate-300 rounded-md border p-1.5 font-medium bg-slate-50">
+                <div class="flex flex-wrap gap-2 items-center bg-white dark:bg-slate-800 p-2 rounded-lg border shadow-sm w-full md:w-auto">
+                    <select id="rel-filter-status" onchange="atualizarGraficosRelatorios()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 font-medium bg-slate-50 dark:bg-slate-900">
                         <option value="">Status: Todos</option>
                         <option value="PENDENTE">Pendente (Espera Atual)</option>
                         <option value="CONCLUIDO">Concluído (Tempo Real)</option>
                     </select>
-                    <select id="rel-filter-mes" onchange="atualizarGraficosRelatorios()" class="text-sm border-slate-300 rounded-md border p-1.5 bg-slate-50">
+                    <select id="rel-filter-mes" onchange="atualizarGraficosRelatorios()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 bg-slate-50 dark:bg-slate-900">
                         <option value="">Mês: Todos</option>
                         <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                         <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
                         <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                         <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                     </select>
-                    <select id="rel-filter-ano" onchange="atualizarGraficosRelatorios()" class="text-sm border-slate-300 rounded-md border p-1.5 bg-slate-50">
+                    <select id="rel-filter-ano" onchange="atualizarGraficosRelatorios()" class="text-sm border-slate-300 dark:border-slate-600 rounded-md border p-1.5 bg-slate-50 dark:bg-slate-900">
                         <option value="">Ano: Todos</option>
                     </select>
                     <button onclick="initRelatorios()" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded border border-transparent hover:border-indigo-100"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4 border-b pb-2 flex justify-between">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4 border-b pb-2 flex justify-between">
                         <span>Especialidade</span>
                         <span class="text-xs font-normal normal-case text-slate-400">Qtd. / Tempo Médio</span>
                     </h3>
                     <div id="listaRelEspecialidade" class="flex flex-col gap-3 min-h-[200px]"></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-600 uppercase mb-4 border-b pb-2 flex justify-between">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase mb-4 border-b pb-2 flex justify-between">
                         <span>Procedimento</span>
                         <span class="text-xs font-normal normal-case text-slate-400">Qtd. / Tempo Médio</span>
                     </h3>
@@ -608,30 +634,30 @@
                 </div>
             </div>
             <div class="flex justify-between items-center mb-4 mt-8">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="alert-triangle" class="text-red-500"></i> Alertas de Risco Próximo</h3>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="alert-triangle" class="text-red-500"></i> Alertas de Risco Próximo</h3>
             </div>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto"><table class="w-full text-left text-sm text-slate-600"><thead class="bg-red-50 text-red-900 uppercase font-bold text-xs border-b border-red-100"><tr><th class="px-6 py-4">Data Risco</th><th class="px-6 py-4">Munícipe</th><th class="px-6 py-4">Procedimento/Local</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Ação</th></tr></thead><tbody id="tabela-risco-body" class="divide-y divide-slate-100"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Carregando análise de risco...</td></tr></tbody></table></div>
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="overflow-x-auto"><table class="w-full text-left text-sm text-slate-600 dark:text-slate-300"><thead class="bg-red-50 text-red-900 uppercase font-bold text-xs border-b border-red-100"><tr><th class="px-6 py-4">Data Risco</th><th class="px-6 py-4">Munícipe</th><th class="px-6 py-4">Procedimento/Local</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Ação</th></tr></thead><tbody id="tabela-risco-body" class="divide-y divide-slate-100 dark:divide-slate-800"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Carregando análise de risco...</td></tr></tbody></table></div>
             </div>
         </div>
 
         <!-- VIEW LISTAGENS -->
         <div id="view-listagens" class="hidden fade-in">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 pb-6">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><i data-lucide="printer" class="text-indigo-600"></i> Listagens e Exportação</h2>
-                    <p class="text-slate-500 text-sm">Gere relatórios específicos prontos para impressão em folha A4.</p>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="printer" class="text-indigo-600"></i> Listagens e Exportação</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Gere relatórios específicos prontos para impressão em folha A4.</p>
                 </div>
                 <button onclick="imprimirListagem()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg flex items-center gap-2 transition-all">
                     <i data-lucide="printer" class="w-4 h-4"></i> Imprimir Listagem
                 </button>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-8">
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="w-full md:w-1/3">
-                        <label class="block text-slate-700 text-sm font-bold mb-2">Tipo de Listagem</label>
-                        <select id="listagem-tipo" onchange="mudarFiltroListagem()" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        <label class="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">Tipo de Listagem</label>
+                        <select id="listagem-tipo" onchange="mudarFiltroListagem()" class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-900">
                             <option value="aniversariantes">Aniversariantes do Mês</option>
                             <option value="pendentes">Processos Pendentes</option>
                             <option value="bairros">Por Bairro</option>
@@ -642,8 +668,8 @@
 
                     <!-- Filtro Secundário Dinâmico -->
                     <div id="listagem-filtro-secundario" class="w-full md:w-1/3">
-                        <label id="lbl-filtro-secundario" class="block text-slate-700 text-sm font-bold mb-2">Selecione o Mês</label>
-                        <select id="inp-filtro-secundario-mes" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        <label id="lbl-filtro-secundario" class="block text-slate-700 dark:text-slate-200 text-sm font-bold mb-2">Selecione o Mês</label>
+                        <select id="inp-filtro-secundario-mes" class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-900">
                             <option value="">Todos os meses</option>
                             <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                             <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
@@ -651,7 +677,7 @@
                             <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                         </select>
                         <div id="container-filtro-texto" class="hidden relative">
-                            <input type="text" id="inp-filtro-secundario-texto" list="listagens-datalist" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 uppercase pr-10 cursor-pointer hide-datalist-arrow" placeholder="Digite aqui...">
+                            <input type="text" id="inp-filtro-secundario-texto" list="listagens-datalist" class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-900 uppercase pr-10 cursor-pointer hide-datalist-arrow" placeholder="Digite aqui...">
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
                                 <i data-lucide="chevron-down" class="w-5 h-5"></i>
                             </div>
@@ -667,15 +693,15 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
-                        <thead id="tabela-listagem-head" class="bg-slate-100 text-slate-800 uppercase font-bold text-xs border-b border-slate-200">
+                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                        <thead id="tabela-listagem-head" class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 uppercase font-bold text-xs border-b border-slate-200 dark:border-slate-700">
                             <tr>
                                 <th class="px-6 py-4">Resultados</th>
                             </tr>
                         </thead>
-                        <tbody id="tabela-listagem-body" class="divide-y divide-slate-100">
+                        <tbody id="tabela-listagem-body" class="divide-y divide-slate-100 dark:divide-slate-800">
                             <tr><td class="px-6 py-8 text-center text-slate-400">Selecione os filtros e clique em "Gerar".</td></tr>
                         </tbody>
                     </table>
@@ -684,42 +710,257 @@
         </div>
 
         <!-- PAINEL ADMIN -->
-        <div id="view-admin-panel" class="tab-content hidden h-full flex flex-col overflow-hidden bg-white relative">
-            <div class="px-6 py-4 border-b border-slate-200 shrink-0">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <i data-lucide="shield" class="w-5 h-5 text-yellow-500"></i> Gerenciamento de Usuários
-                        </h2>
-                        <p class="text-sm text-slate-500 mt-1">Altere o nível de acesso das contas que usam o sistema.</p>
-                    </div>
-                    <button onclick="carregarListaUsuarios()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg transition">Atualizar Lista</button>
+        <div id="view-admin-panel" class="tab-content hidden h-full flex flex-col overflow-hidden bg-white dark:bg-slate-800 relative">
+            <!-- Cabeçalho Admin -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 shrink-0">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <i data-lucide="shield" class="w-5 h-5 text-yellow-500"></i> Painel Administrativo
+                    </h2>
                 </div>
+                <!-- Abas -->
+                <div class="flex gap-1 border-b border-slate-200 dark:border-slate-700 -mb-px">
+                    <button id="admin-tab-usuarios" onclick="trocarAbaAdmin('usuarios')"
+                        class="px-4 py-2 text-sm border-b-2 border-blue-600 text-blue-700 font-bold transition">
+                        <i data-lucide="users" class="w-4 h-4 inline mr-1"></i> Usuários
+                    </button>
+                    <button id="admin-tab-liderancas" onclick="trocarAbaAdmin('liderancas')"
+                        class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
+                        <i data-lucide="tag" class="w-4 h-4 inline mr-1"></i> Lideranças
+                    </button>
+                    <button id="admin-tab-valores" onclick="trocarAbaAdmin('valores')"
+                        class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
+                        <i data-lucide="dollar-sign" class="w-4 h-4 inline mr-1"></i> Valores
+                    </button>
+                <button id="admin-tab-auditoria" onclick="trocarAbaAdmin('auditoria')"
+class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
+<i data-lucide="history" class="w-4 h-4 inline mr-1"></i> Auditoria (Logs)
+</button>
+</div>
             </div>
 
-            <div class="flex-1 overflow-auto p-6 bg-slate-50">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <table class="w-full text-left border-collapse whitespace-nowrap">
-                        <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
-                            <tr>
-                                <th class="px-4 py-3">E-mail do Usuário</th>
-                                <th class="px-4 py-3 text-center">Nível de Acesso</th>
-                                <th class="px-4 py-3 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-usuarios-body" class="divide-y divide-slate-100 text-sm">
-                            <tr>
-                                <td colspan="3" class="px-4 py-8 text-center text-slate-400">Carregando usuários...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-900">
+
+                <!-- ABA: USUÁRIOS -->
+                <div id="admin-content-usuarios">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Altere o nível de acesso das contas que usam o sistema.</p>
+                            <button onclick="carregarListaUsuarios()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg transition text-sm">Atualizar</button>
+                        </div>
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-[10px] border-b border-slate-200 dark:border-slate-700">
+                                <tr>
+                                    <th class="px-4 py-3">E-mail do Usuário</th>
+                                    <th class="px-4 py-3 text-center">Nível de Acesso</th>
+                                    <th class="px-4 py-3 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-usuarios-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                <tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">Carregando usuários...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                
+<!-- ABA: AUDITORIA -->
+<div id="admin-content-auditoria" class="hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+            <p class="text-sm text-slate-600 dark:text-slate-300 font-bold"><i data-lucide="activity" class="inline w-4 h-4 mr-1 text-slate-400"></i> Registro de Atividades</p>
+            <button onclick="carregarAuditoria()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg transition text-sm">Atualizar Logs</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-[10px] border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                        <th class="px-4 py-3">Data/Hora</th>
+                        <th class="px-4 py-3">Usuário</th>
+                        <th class="px-4 py-3">Ação</th>
+                        <th class="px-4 py-3">Módulo</th>
+                        <th class="px-4 py-3">Detalhes</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-auditoria-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                    <tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">Clique em Atualizar para carregar.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- ABA: LIDERANÇAS -->
+                <div id="admin-content-liderancas" class="hidden">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="font-bold text-slate-800 dark:text-slate-100">Renomear Lideranças / Indicações</h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Renomear atualiza todos os munícipes vinculados automaticamente.</p>
+                            </div>
+                            <button onclick="carregarLiderancasAdmin()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg transition text-sm">Atualizar</button>
+                        </div>
+                        <div id="lista-liderancas-admin">
+                            <p class="text-slate-400 italic text-sm">Clique em "Atualizar" para carregar.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA: VALORES DE PROCEDIMENTOS -->
+                <div id="admin-content-valores" class="hidden">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="font-bold text-slate-800 dark:text-slate-100">Tabela de Valores Padrão</h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Defina o valor padrão por procedimento. Atendimentos já salvos não serão alterados.</p>
+                            </div>
+                            <button onclick="carregarValoresProcedimentos()" class="px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold rounded-lg transition text-sm">Atualizar</button>
+                        </div>
+                        <div id="lista-valores-admin">
+                            <p class="text-slate-400 italic text-sm">Clique em "Atualizar" para carregar.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- VIEW AGENDA -->
+        <div id="view-agenda" class="hidden fade-in space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="calendar" class="text-amber-500"></i> Agenda Oficial</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Compromissos do Gabinete e Visitas Externas</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="abrirModalAgenda()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm flex items-center gap-2 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Novo Compromisso
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- CALENDÁRIO / FILTROS -->
+                <div class="w-full md:w-1/4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+                    <h3 class="font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2"><i data-lucide="filter" class="w-4 h-4 text-slate-400"></i> Filtros</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Mês / Ano</label>
+                            <input type="month" id="agenda-filtro-mes" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm focus:border-amber-500 outline-none" onchange="carregarAgenda()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Categoria</label>
+                            <select id="agenda-filtro-categoria" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm focus:border-amber-500 outline-none" onchange="carregarAgenda()">
+                                <option value="">Todas as Categorias</option>
+                                <option value="GABINETE">Gabinete / Interno</option>
+                                <option value="VISITA">Visita Externa / Reunião</option>
+                                <option value="EVENTO">Evento Público</option>
+                            </select>
+                        </div>
+                        <button onclick="carregarAgenda()" class="w-full py-2 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-sm font-bold rounded border border-slate-300 dark:border-slate-600 transition">Atualizar</button>
+                    </div>
+                </div>
+
+                <!-- LISTA DE COMPROMISSOS -->
+                <div class="w-full md:w-3/4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="bg-slate-50 dark:bg-slate-900 p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700 dark:text-slate-200" id="agenda-titulo-lista">Compromissos do Mês</h3>
+                    </div>
+                    <div id="agenda-lista" class="divide-y divide-slate-100 dark:divide-slate-800 min-h-[300px]">
+                        <div class="p-8 text-center text-slate-400 italic">Carregando agenda...</div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        
+    <!-- ABA: CAMPANHAS WHATSAPP -->
+    <div id="view-campanhas" class="hidden fade-in space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <i data-lucide="message-square" class="text-emerald-500"></i> Campanhas WhatsApp
+                </h2>
+                <p class="text-slate-500 dark:text-slate-400 text-sm">Gere links de disparo em massa para listas segmentadas</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl">
+            <!-- Coluna Esquerda: Filtros e Mensagem -->
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-4 text-sm flex items-center gap-2"><i data-lucide="filter" class="w-4 h-4 text-slate-400"></i> Filtrar Público</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="label-field text-xs">Bairro</label>
+                            <select id="filtro-camp-bairro" class="input-field text-sm">
+                                <option value="">Todos os bairros</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-field text-xs">Liderança / Indicação</label>
+                            <select id="filtro-camp-indicacao" class="input-field text-sm">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-field text-xs">Situação Eleitoral</label>
+                            <select id="filtro-camp-situacao" class="input-field text-sm">
+                                <option value="">Qualquer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-field text-xs">Sexo</label>
+                            <select id="filtro-camp-sexo" class="input-field text-sm">
+                                <option value="">Qualquer</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Feminino</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-field text-xs">Apenas com WhatsApp?</label>
+                            <select id="filtro-camp-zap" class="input-field text-sm">
+                                <option value="sim">Sim (Ocultar sem telefone)</option>
+                                <option value="nao">Não (Mostrar todos)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-2 text-sm flex items-center gap-2"><i data-lucide="type" class="w-4 h-4 text-slate-400"></i> Mensagem Base</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Use <strong>{nome}</strong> para o 1º nome, ou <strong>{nome_completo}</strong>.</p>
+                    <textarea id="campanha-msg" rows="5" class="input-field text-sm" placeholder="Ex: Olá {nome}! Passando para lembrar da nossa reunião amanhã!"></textarea>
+                    
+                    <button onclick="gerarFilaCampanha()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition" id="btn-gerar-campanha">
+                        <i data-lucide="play" class="w-4 h-4"></i> Gerar Fila de Disparo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Fila -->
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 h-full flex flex-col">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50 dark:bg-slate-900 rounded-t-xl flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1"><i data-lucide="list-ordered" class="w-4 h-4 text-slate-400"></i> Fila de Disparo</h3>
+                    </div>
+                    <div id="campanha-resultados" class="p-4 flex-1 overflow-auto bg-slate-50 dark:bg-slate-900/50">
+                        <div class="h-full flex flex-col items-center justify-center text-slate-400 space-y-4 py-12">
+                            <i data-lucide="inbox" class="w-12 h-12 opacity-20"></i>
+                            <p class="text-sm">Preencha os filtros ao lado e gere a fila para começar a disparar as mensagens.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
         <!-- TELA DE EXPORTAÇÃO -->
-        <div id="view-exportacao" class="hidden bg-white rounded-xl shadow-lg border border-slate-200 fade-in p-6 md:p-8">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="download-cloud" class="text-blue-600"></i> Exportar Excel</h2>
+        <div id="view-exportacao" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 fade-in p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2"><i data-lucide="download-cloud" class="text-blue-600"></i> Exportar Excel</h2>
             
             <div class="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-lg text-sm text-emerald-800">
                 <p class="font-bold mb-2">Instruções:</p>
@@ -736,13 +977,13 @@
 
             <div id="loading-export" class="hidden mt-8 text-center">
                 <i data-lucide="loader-2" class="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-2"></i>
-                <p class="text-slate-600 font-medium">Buscando e formatando todos os dados do sistema...</p>
+                <p class="text-slate-600 dark:text-slate-300 font-medium">Buscando e formatando todos os dados do sistema...</p>
                 <p class="text-xs text-slate-400 mt-2">Isso pode levar alguns instantes.</p>
             </div>
         </div>
 
         <!-- VIEW HISTÓRICO PACIENTE -->
-        <div id="view-historico-paciente" class="hidden bg-white rounded-xl shadow-lg border border-slate-200 relative fade-in overflow-hidden flex flex-col h-full md:h-auto max-h-screen md:max-h-[90vh]">
+        <div id="view-historico-paciente" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 relative fade-in overflow-hidden flex flex-col h-full md:h-auto max-h-screen md:max-h-[90vh]">
             <div class="bg-slate-900 text-white px-6 py-4 border-b border-slate-800 flex justify-between items-center shrink-0">
                 <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="history" class="text-blue-400 w-5 h-5"></i> Histórico do Munícipe</h2>
                 <div class="flex gap-2">
@@ -754,37 +995,39 @@
                 </div>
             </div>
             <div class="p-6 md:p-8 overflow-y-auto">
-                <div id="hist-header" class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div id="hist-header" class="mb-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-4 justify-between items-center">
                     <div>
-                        <h3 class="text-xl font-bold text-slate-800" id="hist-nome">Nome do Munícipe</h3>
-                        <div class="flex gap-4 text-sm text-slate-500 mt-1"><span id="hist-cpf">CPF: ...</span><span id="hist-tel">Tel: ...</span></div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100" id="hist-nome">Nome do Munícipe</h3>
+                        <div class="flex gap-4 text-sm text-slate-500 dark:text-slate-400 mt-1"><span id="hist-cpf">CPF: ...</span><span id="hist-tel">Tel: ...</span></div>
                     </div>
                     <div class="flex gap-2">
-                        <button id="btn-hist-editar" onclick="abrirEdicaoDireta(histPacienteAtual.cpf, histPacienteAtual.id)" class="btn-action bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 text-sm font-medium flex items-center gap-2"><i data-lucide="edit-2" class="w-4 h-4"></i> Editar Dados</button>
+                        
+                        <button id="btn-hist-zap" onclick="abrirModalZapConfirmacao()" class="btn-action bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 text-sm font-medium flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp Confirmação</button>
+                        <button id="btn-hist-editar" onclick="abrirEdicaoDireta(histPacienteAtual.cpf, histPacienteAtual.id)" class="btn-action bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 dark:bg-slate-900 text-sm font-medium flex items-center gap-2"><i data-lucide="edit-2" class="w-4 h-4"></i> Editar Dados</button>
                         <button id="btn-hist-novo" onclick="abrirAtendimentoDireto(histPacienteAtual.cpf, histPacienteAtual.id)" class="btn-action bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Atend.</button>
                     </div>
                 </div>
 
                 <!-- NOVA ÁREA DE DETALHES DO PACIENTE NO HISTÓRICO -->
-                <div id="hist-detalhes" class="mb-8 p-4 bg-white border border-slate-100 rounded-lg shadow-sm text-sm text-slate-600 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div id="hist-detalhes" class="mb-8 p-4 bg-white dark:bg-slate-800 border border-slate-100 rounded-lg shadow-sm text-sm text-slate-600 dark:text-slate-300 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Preenchido via JS -->
                     <div class="col-span-3 text-center text-slate-400 italic">Carregando detalhes...</div>
                 </div>
 
-                <h4 class="text-sm font-bold text-slate-500 uppercase mb-4 border-b pb-2">Linha do Tempo</h4>
-                <div class="relative pl-4 border-l-2 border-slate-200 space-y-8" id="hist-timeline"><p class="text-slate-400 text-sm italic pl-4">Carregando histórico...</p></div>
+                <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase mb-4 border-b pb-2">Linha do Tempo</h4>
+                <div class="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 space-y-8" id="hist-timeline"><p class="text-slate-400 text-sm italic pl-4">Carregando histórico...</p></div>
             </div>
         </div>
 
         <!-- FORM PACIENTE (MUNÍCIPE) -->
-        <div id="view-form-paciente" class="hidden bg-white rounded-xl shadow-lg border border-slate-200 relative fade-in overflow-hidden">
-            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="user-plus" class="text-blue-600 w-5 h-5"></i> Ficha de Munícipe</h2>
+        <div id="view-form-paciente" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 relative fade-in overflow-hidden">
+            <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="user-plus" class="text-blue-600 w-5 h-5"></i> Ficha de Munícipe</h2>
                 <div class="flex gap-2">
-                    <button id="btn-imprimir" onclick="imprimirFicha()" class="hidden text-slate-500 hover:text-blue-600 text-sm border border-slate-300 px-3 py-1 rounded bg-white hover:bg-blue-50 transition items-center gap-1"><i data-lucide="printer" class="w-4 h-4"></i> Imprimir</button>
+                    <button id="btn-imprimir" onclick="imprimirFicha()" class="hidden text-slate-500 dark:text-slate-400 hover:text-blue-600 text-sm border border-slate-300 dark:border-slate-600 px-3 py-1 rounded bg-white dark:bg-slate-800 hover:bg-blue-50 transition items-center gap-1"><i data-lucide="printer" class="w-4 h-4"></i> Imprimir</button>
                     <!-- BOTÃO DE EXCLUIR PACIENTE (NOVO) -->
                     <button id="btn-delete-paciente" onclick="confirmarExclusaoPaciente()" class="hidden text-red-500 hover:text-white hover:bg-red-600 text-sm border border-red-200 px-3 py-1 rounded bg-red-50 transition items-center gap-1 btn-delete"><i data-lucide="trash-2" class="w-4 h-4"></i> Excluir</button>
-                    <button onclick="voltarInicio()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    <button onclick="voltarInicio()" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
             </div>
             <div class="p-6 md:p-8">
@@ -799,10 +1042,10 @@
                         <p id="msg_cpf_paciente" class="text-sm mt-3 font-medium min-h-[20px] text-blue-800"></p>
                     </div>
                     <!-- ADICIONADO BOTÃO DE EXCLUIR AQUI TAMBÉM (NO CARD DE ENCONTRADO) -->
-                    <div id="opcoes-paciente-existente" class="hidden text-center p-8 border-2 border-dashed border-blue-200 rounded-xl bg-slate-50 mb-6 fade-in">
+                    <div id="opcoes-paciente-existente" class="hidden text-center p-8 border-2 border-dashed border-blue-200 rounded-xl bg-slate-50 dark:bg-slate-900 mb-6 fade-in">
                         <div class="text-xl text-blue-900 font-bold mb-6">Munícipe já cadastrado!</div>
                         <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto mb-4">
-                            <button type="button" onclick="editarPaciente()" class="btn-action flex-1 bg-white border border-slate-300 text-slate-700 py-3 px-4 rounded-lg hover:bg-slate-50 font-medium transition shadow-sm flex items-center justify-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Editar Dados</button>
+                            <button type="button" onclick="editarPaciente()" class="btn-action flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3 px-4 rounded-lg hover:bg-slate-50 dark:bg-slate-900 font-medium transition shadow-sm flex items-center justify-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Editar Dados</button>
                             <button type="button" onclick="irParaAtendimento()" class="btn-action flex-1 bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 font-bold shadow-md transition flex items-center justify-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4"></i> Criar Atendimento</button>
                         </div>
                         <!-- Botão de Excluir Extra -->
@@ -813,24 +1056,35 @@
                             <h3 class="form-section-title">Dados Pessoais</h3>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                                 <div class="md:col-span-8"><label class="label-field">Nome Completo *</label><input type="text" name="nome" id="field_nome" required class="input-field uppercase"></div>
-                                <!-- MUDANÇA: LABEL ALTERADA DE APELIDO PARA REFERÊNCIA -->
+                                <div class="md:col-span-4"><label class="label-field">Nome Social</label><input type="text" name="nome_social" id="field_nome_social" class="input-field uppercase"></div>
+                                
                                 <div class="md:col-span-4"><label class="label-field">Referência</label><input type="text" name="apelido" id="field_apelido" class="input-field uppercase"></div>
-                                
                                 <div class="md:col-span-4"><label class="label-field">RG</label><input type="text" name="rg" id="field_rg" class="input-field"></div>
-                                <div class="md:col-span-4"><label class="label-field">Família</label><input type="text" name="familia" id="field_familia" class="input-field uppercase"></div>
-                                <div class="md:col-span-4"><label class="label-field">Data de Nascimento</label><input type="date" name="nascimento" id="field_nascimento" class="input-field"></div>
+                                <div class="md:col-span-4"><label class="label-field">Data de Nascimento <span id="idade_calc" class="text-emerald-600 font-bold ml-1 text-xs"></span></label><input type="date" name="nascimento" id="field_nascimento" class="input-field" onchange="calcularIdadeFormulario()"></div>
                                 
-                                <div class="md:col-span-4"><label class="label-field">Sexo</label><select name="sexo" id="field_sexo" class="input-field bg-white"><option value="">Selecione...</option><option value="MASCULINO">Masculino</option><option value="FEMININO">Feminino</option><option value="OUTRO">Outro</option></select></div>
+                                <div class="md:col-span-4"><label class="label-field">Família</label><input type="text" name="familia" id="field_familia" class="input-field uppercase"></div>
+                                <div class="md:col-span-4"><label class="label-field">Cônjuge</label><input type="text" name="conjuge" id="field_conjuge" class="input-field uppercase"></div>
+                                <div class="md:col-span-4"><label class="label-field">Sexo</label><select name="sexo" id="field_sexo" class="input-field bg-white dark:bg-slate-800"><option value="">Selecione...</option><option value="MASCULINO">Masculino</option><option value="FEMININO">Feminino</option><option value="OUTRO">Outro</option></select></div>
+                                
                                 <div class="md:col-span-4"><label class="label-field">WhatsApp *</label><input type="text" name="tel1" id="field_tel1" required class="input-field"></div>
                                 <div class="md:col-span-4"><label class="label-field">Telefone 2</label><input type="text" name="tel2" id="field_tel2" class="input-field"></div>
+                                <div class="md:col-span-4"><label class="label-field">Nº Prontuário</label><input type="text" name="prontuario" id="field_prontuario_paciente" class="input-field uppercase" placeholder="Caso possua"></div>
+                                
+                                <div class="md:col-span-6"><label class="label-field">Profissão</label><input type="text" name="profissao" id="field_profissao" class="input-field uppercase"></div>
+                                <div class="md:col-span-6"><label class="label-field">Cargo Eclesiástico</label><input type="text" name="cargo_eclesiastico" id="field_cargo_eclesiastico" class="input-field uppercase"></div>
+                                
+                                <div class="md:col-span-12"><label class="label-field">Parentes (Vínculos Familiares)</label><textarea name="parentes" id="field_parentes" rows="3" class="input-field uppercase" placeholder="Ex: Pai - João da Silva&#10;Mãe - Maria da Silva"></textarea></div>
                             </div>
                         </div>
                         <div>
                             <h3 class="form-section-title">Endereço</h3>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                                <div class="md:col-span-3"><label class="label-field">CEP</label><input type="text" name="cep" id="field_cep" class="input-field" maxlength="9" oninput="this.value = this.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2')" onblur="buscarCep(this.value)"></div>
-                                <div class="md:col-span-5"><label class="label-field">Município</label><input type="text" name="municipio" id="field_municipio" class="input-field bg-slate-100 cursor-not-allowed uppercase" readonly></div>
-                                <div class="md:col-span-4"><label class="label-field">Bairro</label><input type="text" name="bairro" id="field_bairro" class="input-field bg-slate-100 cursor-not-allowed uppercase" readonly></div>
+                                <div class="md:col-span-3">
+                                    <div class="flex justify-between items-center"><label class="label-field">CEP</label> <button type="button" onclick="destravarEndereco()" class="text-[10px] text-blue-600 font-bold hover:underline mb-1">Digitar Manual</button></div>
+                                    <input type="text" name="cep" id="field_cep" class="input-field" maxlength="9" oninput="this.value = this.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2')" onblur="buscarCep(this.value)">
+                                </div>
+                                <div class="md:col-span-5"><label class="label-field">Município</label><input type="text" name="municipio" id="field_municipio" class="input-field bg-slate-100 dark:bg-slate-950 cursor-not-allowed uppercase" readonly></div>
+                                <div class="md:col-span-4"><label class="label-field">Bairro</label><input type="text" name="bairro" id="field_bairro" class="input-field bg-slate-100 dark:bg-slate-950 cursor-not-allowed uppercase" readonly></div>
                                 <div class="md:col-span-8"><label class="label-field">Logradouro</label><input type="text" name="logradouro" id="field_logradouro" class="input-field uppercase"></div>
                                 <div class="md:col-span-4"><label class="label-field">Ponto de Referência</label><input type="text" name="referencia" id="field_referencia" class="input-field uppercase"></div>
                             </div>
@@ -841,14 +1095,27 @@
                                 <div class="md:col-span-4"><label class="label-field">Número Cartão do SUS</label><input type="text" name="sus" id="field_sus" class="input-field" placeholder="000 0000 0000 0000"></div>
                                 <div class="md:col-span-4"><label class="label-field">Título de Eleitor</label><input type="text" name="titulo" id="field_titulo" class="input-field"></div>
                                 <div class="md:col-span-4" id="container_status_titulo"></div>
-                                <div class="md:col-span-6"><label class="label-field">Vota no Município?</label><select name="municipio_titulo" id="field_municipio_titulo" class="input-field bg-white uppercase"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NAO">NÃO</option></select></div>
+                                <div class="md:col-span-6"><label class="label-field">Vota no Município?</label><select name="municipio_titulo" id="field_municipio_titulo" class="input-field bg-white dark:bg-slate-800 uppercase"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NAO">NÃO</option></select></div>
                                 <div class="md:col-span-3"><label class="label-field">Zona</label><input type="text" name="zona" id="field_zona" class="input-field"></div>
                                 <div class="md:col-span-3"><label class="label-field">Seção</label><input type="text" name="secao" id="field_secao" class="input-field"></div>
                                 
                                 <div class="md:col-span-6" id="container_indicacao"></div>
-                                <div class="md:col-span-6"><label class="label-field">Liderança?</label><select name="lideranca" id="field_lideranca" class="input-field bg-white uppercase"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NAO">NÃO</option></select></div>
+                                <div class="md:col-span-6"><label class="label-field">Liderança?</label><select name="lideranca" id="field_lideranca" class="input-field bg-white dark:bg-slate-800 uppercase"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NAO">NÃO</option></select></div>
 
                                 <div class="md:col-span-12"><label class="label-field">Observações Gerais</label><textarea name="obs" id="field_obs" rows="3" class="input-field uppercase"></textarea></div>
+                                <div class="md:col-span-12"><label class="label-field flex items-center gap-2"><i data-lucide="link" class="w-4 h-4 text-blue-500"></i> Link de Documentos (Drive / Nuvem)</label><input type="url" name="documentos_link" id="field_documentos_link" class="input-field text-blue-600" placeholder="https://drive.google.com/... (Cole o link da pasta de documentos aqui)"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="form-section-title text-red-600 border-red-200">Índice de Vulnerabilidade</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-red-50 p-4 rounded-lg border border-red-100">
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="vuln_idoso" id="field_vuln_idoso" value="SIM" class="w-4 h-4 text-red-600 rounded border-slate-300 dark:border-slate-600"> <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Idoso</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="vuln_pcd" id="field_vuln_pcd" value="SIM" class="w-4 h-4 text-red-600 rounded border-slate-300 dark:border-slate-600"> <span class="text-sm font-medium text-slate-700 dark:text-slate-200">PCD</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="vuln_crianca" id="field_vuln_crianca" value="SIM" class="w-4 h-4 text-red-600 rounded border-slate-300 dark:border-slate-600"> <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Criança</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="vuln_gestante" id="field_vuln_gestante" value="SIM" class="w-4 h-4 text-red-600 rounded border-slate-300 dark:border-slate-600"> <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Gestante</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="vuln_oncologico" id="field_vuln_oncologico" value="SIM" class="w-4 h-4 text-red-600 rounded border-slate-300 dark:border-slate-600"> <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Paciente Oncológico</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="vuln_rara" id="field_vuln_rara" value="SIM" class="w-4 h-4 text-red-600 rounded border-slate-300 dark:border-slate-600"> <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Doença Rara</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer md:col-span-2"><input type="checkbox" name="vuln_cirurgia" id="field_vuln_cirurgia" value="SIM" class="w-4 h-4 text-red-600 rounded border-slate-300 dark:border-slate-600"> <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Aguardando Cirurgia</span></label>
                             </div>
                         </div>
                         <div class="pt-6 border-t border-slate-100">
@@ -865,24 +1132,24 @@
         </div>
 
         <!-- FORM ATENDIMENTO (ATUALIZADO) -->
-        <div id="view-form-atendimento" class="hidden bg-white rounded-xl shadow-lg border border-slate-200 relative fade-in overflow-hidden">
-            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="clipboard-list" class="text-emerald-600 w-5 h-5"></i> <span id="titulo_form_atend">Novo Atendimento</span></h2>
+        <div id="view-form-atendimento" class="hidden bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 relative fade-in overflow-hidden">
+            <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="clipboard-list" class="text-emerald-600 w-5 h-5"></i> <span id="titulo_form_atend">Novo Atendimento</span></h2>
                 <div class="flex gap-2">
                     <button id="btn-delete-atendimento" onclick="confirmarExclusaoAtendimento()" class="hidden text-red-500 hover:text-white hover:bg-red-600 text-sm border border-red-200 px-3 py-1 rounded bg-red-50 transition items-center gap-1 btn-delete"><i data-lucide="trash-2" class="w-4 h-4"></i> Excluir</button>
-                    <button onclick="voltarInicio()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    <button onclick="voltarInicio()" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
             </div>
             <div class="p-6 md:p-8">
                 <form id="frmAtendimento" onsubmit="submitAtendimento(event)">
                     <input type="hidden" name="id" id="atend_id_hidden">
-                    <div class="mb-8 p-6 bg-slate-50 rounded-xl border border-slate-200">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Buscar Munícipe</label>
+                    <div class="mb-8 p-6 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Buscar Munícipe</label>
                         <div class="flex gap-3">
-                            <input type="text" id="busca_cpf" placeholder="Digite o CPF ou Nome..." class="flex-1 rounded-lg border-slate-300 border p-3 shadow-sm focus:border-emerald-500 outline-none text-lg" onkeydown="if(event.key === 'Enter'){event.preventDefault(); buscarPacienteParaAtendimento();}">
+                            <input type="text" id="busca_cpf" placeholder="Digite o CPF ou Nome..." class="flex-1 rounded-lg border-slate-300 dark:border-slate-600 border p-3 shadow-sm focus:border-emerald-500 outline-none text-lg" onkeydown="if(event.key === 'Enter'){event.preventDefault(); buscarPacienteParaAtendimento();}">
                             <button type="button" onclick="buscarPacienteParaAtendimento()" class="bg-slate-600 text-white px-6 py-2 rounded-lg hover:bg-slate-700 shadow-sm transition"><i data-lucide="search" class="w-5 h-5"></i></button>
                         </div>
-                        <div id="resultado_busca" class="mt-3 text-sm text-slate-600 h-6 font-medium"></div>
+                        <div id="resultado_busca" class="mt-3 text-sm text-slate-600 dark:text-slate-300 h-6 font-medium"></div>
                         <input type="hidden" name="cpf_paciente" id="hidden_cpf">
                         <input type="hidden" name="nome_paciente" id="hidden_nome">
                     </div>
@@ -893,16 +1160,9 @@
                             <h3 class="form-section-title text-emerald-700 border-emerald-200">Adicionar Procedimentos</h3>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
                                 <!-- LINHA 1: Data, Local e Prontuário (Condicional) -->
+                                <!-- LINHA 1: Data, Local -->
                                 <div class="md:col-span-3"><label class="label-field">Data Abertura</label><input type="date" id="data_abertura" class="input-field"></div>
-                                
-                                <!-- LOCAL MOVIDO PARA CÁ (Antes do Prontuário) -->
-                                <div class="md:col-span-5" id="container_local"></div>
-                                
-                                <!-- PRONTUÁRIO MOVIDO PARA CÁ (Depende do Local) -->
-                                <div class="md:col-span-4">
-                                    <label class="label-field">Nº Prontuário <span class="text-[10px] font-normal text-slate-400">(Apenas HO)</span></label>
-                                    <input type="text" id="field_prontuario" class="input-field bg-slate-100 cursor-not-allowed" disabled placeholder="Selecione Local HO...">
-                                </div>
+                                <div class="md:col-span-9" id="container_local"></div>
 
                                 <!-- LINHA 2: Categoria, Especialidade -->
                                 <div class="md:col-span-6" id="container_tipo_servico"></div>
@@ -918,10 +1178,19 @@
                                 
                                 <!-- LINHA 5: Datas e Status -->
                                 <div class="md:col-span-3"><label class="label-field">Data Marcação</label><input type="date" id="field_data_marcacao" onchange="calcularDataRisco()" class="input-field"></div>
-                                <div class="md:col-span-3"><label class="label-field">Data Risco (Auto)</label><input type="date" id="field_data_risco" class="input-field bg-slate-50"></div>
+                                <div class="md:col-span-3"><label class="label-field">Data Risco (Auto)</label><input type="date" id="field_data_risco" class="input-field bg-slate-50 dark:bg-slate-900"></div>
                                 <div class="md:col-span-3"><label class="label-field">Data Conclusão</label><input type="date" id="field_data_conclusao" class="input-field"></div>
                                 <div class="md:col-span-3" id="container_status_atendimento"></div>
                                 
+                                <div class="md:col-span-6"><label class="label-field">Prioridade / Triagem</label>
+                                    <select id="field_prioridade" class="input-field bg-white dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-200">
+                                        <option value="BAIXA">🟢 Baixa Prioridade</option>
+                                        <option value="MEDIA">🟡 Média Prioridade</option>
+                                        <option value="ALTA">🟠 Alta Prioridade</option>
+                                        <option value="URGENTE">🔴 Urgente</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-12"><label class="label-field flex items-center gap-2"><i data-lucide="link" class="w-4 h-4 text-emerald-500"></i> Link de Anexos (Exames, Receitas)</label><input type="url" id="field_anexos_link" class="input-field text-blue-600" placeholder="https://drive.google.com/... (Cole o link da nuvem)"></div>
                                 <div class="md:col-span-12"><label class="label-field">Observações do Item</label><textarea id="field_obs_atendimento" rows="2" class="input-field uppercase"></textarea></div>
                             </div>
                             <div class="flex justify-end">
@@ -932,9 +1201,9 @@
                         <!-- TABELA DE ITENS PARA SALVAR (NOVO) -->
                         <div id="container-lista-procedimentos">
                             <h3 class="form-section-title">Itens a Salvar</h3>
-                            <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                                <table class="w-full text-left text-sm text-slate-600">
-                                    <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-xs border-b border-slate-200">
+                            <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
+                                <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                    <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-xs border-b border-slate-200 dark:border-slate-700">
                                         <tr>
                                             <th class="px-4 py-2">Data</th>
                                             <th class="px-4 py-2">Serviço/Proc.</th>
@@ -943,7 +1212,7 @@
                                             <th class="px-4 py-2 text-right">Ação</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="lista-procedimentos-temp" class="divide-y divide-slate-100 bg-white">
+                                    <tbody id="lista-procedimentos-temp" class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-800">
                                         <tr><td colspan="5" class="px-4 py-4 text-center text-slate-400 italic">Nenhum item adicionado.</td></tr>
                                     </tbody>
                                 </table>
@@ -966,25 +1235,25 @@
         
         <!-- MODAL GENÉRICO -->
         <div id="modal-lista-relatorio" class="fixed inset-0 bg-black/60 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col animate-fade-in">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col animate-fade-in">
+                <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center shrink-0">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800" id="titulo-modal-relatorio">Detalhes</h2>
-                        <p class="text-xs text-slate-500">Clique para ver mais detalhes</p>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100" id="titulo-modal-relatorio">Detalhes</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Clique para ver mais detalhes</p>
                     </div>
-                    <button onclick="document.getElementById('modal-lista-relatorio').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    <button onclick="document.getElementById('modal-lista-relatorio').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 transition"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
                 <div class="overflow-y-auto flex-1 p-0">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-xs sticky top-0 shadow-sm">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                            <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-xs sticky top-0 shadow-sm">
                                 <tr>
                                     <th id="th-col1" class="px-6 py-3">Data Abertura</th>
                                     <th id="th-col2" class="px-6 py-3">Munícipe</th>
                                     <th id="th-col3" class="px-6 py-3 text-right">Espera</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-modal-relatorio" class="divide-y divide-slate-100"></tbody>
+                            <tbody id="tbody-modal-relatorio" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                         </table>
                     </div>
                 </div>
@@ -993,27 +1262,27 @@
 
         <!-- MODAL RELATÓRIO ELEITORAL (NOVO) -->
         <div id="modal-relatorio-eleitoral" class="fixed inset-0 bg-black/60 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-            <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col animate-fade-in">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center shrink-0 gap-4">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col animate-fade-in">
+                <div class="bg-slate-50 dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center shrink-0 gap-4">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="flag" class="text-blue-600 w-5 h-5"></i> Relatório de Munícipes</h2>
-                        <p class="text-xs text-slate-500">Listagem completa da Família</p>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="flag" class="text-blue-600 w-5 h-5"></i> Relatório de Munícipes</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Listagem completa da Família</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <select id="filtro-modal-eleitoral" onchange="filtrarRelatorioEleitoral()" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 focus:border-blue-500 outline-none">
+                        <select id="filtro-modal-eleitoral" onchange="filtrarRelatorioEleitoral()" class="text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 focus:border-blue-500 outline-none">
                             <option value="">Todos os Status</option>
                         </select>
                         <!-- BOTÃO DE IMPRIMIR ADICIONADO -->
-                        <button onclick="imprimirRelatorioEleitoral()" class="text-slate-500 hover:text-blue-600 transition p-2 rounded hover:bg-slate-100" title="Imprimir Relatório">
+                        <button onclick="imprimirRelatorioEleitoral()" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 transition p-2 rounded hover:bg-slate-100 dark:bg-slate-950" title="Imprimir Relatório">
                             <i data-lucide="printer" class="w-5 h-5"></i>
                         </button>
-                        <button onclick="document.getElementById('modal-relatorio-eleitoral').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        <button onclick="document.getElementById('modal-relatorio-eleitoral').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 transition"><i data-lucide="x" class="w-6 h-6"></i></button>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 p-0">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-xs sticky top-0 shadow-sm">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                            <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-xs sticky top-0 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-3">Nome / CPF</th>
                                     <th class="px-6 py-3">Contato</th>
@@ -1022,26 +1291,62 @@
                                     <th class="px-6 py-3 text-right">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-relatorio-eleitoral" class="divide-y divide-slate-100"></tbody>
+                            <tbody id="tbody-relatorio-eleitoral" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                         </table>
                     </div>
                 </div>
-                <div class="p-2 bg-slate-50 border-t text-center text-xs text-slate-400 font-medium" id="contador-eleitoral">Carregando...</div>
+                <div class="p-2 bg-slate-50 dark:bg-slate-900 border-t text-center text-xs text-slate-400 font-medium" id="contador-eleitoral">Carregando...</div>
             </div>
         </div>
     </main>
 
+    
+    <!-- MODAL CONFIRMAÇÃO ZAP -->
+    <div id="modal-zap-confirmacao" class="fixed inset-0 bg-slate-900/50 z-[90] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-emerald-600 px-6 py-4 flex justify-between items-center text-white shrink-0">
+                <h2 class="text-lg font-bold flex items-center gap-2"><i data-lucide="message-circle" class="w-5 h-5"></i> Confirmação de Agendamento</h2>
+                <button onclick="document.getElementById('modal-zap-confirmacao').classList.add('hidden')" class="text-emerald-100 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-4 bg-slate-50 dark:bg-slate-900">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Data Agendada</label>
+                        <input type="text" id="zap-data" class="w-full border border-slate-300 dark:border-slate-600 rounded p-2 text-sm focus:border-emerald-500 outline-none" placeholder="Ex: 02/06" oninput="atualizarTextoZap()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Horário</label>
+                        <input type="text" id="zap-hora" class="w-full border border-slate-300 dark:border-slate-600 rounded p-2 text-sm focus:border-emerald-500 outline-none" placeholder="Ex: 14:30h" oninput="atualizarTextoZap()">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Pré-visualização da Mensagem (Você pode editar aqui)</label>
+                    <textarea id="zap-texto-final" rows="15" class="w-full border border-slate-300 dark:border-slate-600 rounded p-3 text-sm focus:border-emerald-500 outline-none resize-none font-sans bg-white dark:bg-slate-800 shadow-inner leading-relaxed"></textarea>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-end gap-2 shrink-0">
+                <button onclick="document.getElementById('modal-zap-confirmacao').classList.add('hidden')" class="px-4 py-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 rounded-lg font-medium transition">Cancelar</button>
+                <button onclick="enviarZapConfirmacao()" class="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold shadow-sm flex items-center gap-2 transition">
+                    <i data-lucide="send" class="w-4 h-4"></i> Enviar WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FIM MODAL CONFIRMAÇÃO ZAP -->
+
     <!-- MODAL GLOBAL DE ALERTA -->
     <div id="global-modal-alert" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300 relative">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300 relative">
             <div class="p-6 text-center">
                 <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
                     <i data-lucide="info" class="w-8 h-8"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-800 mb-2">Aviso</h3>
-                <p id="global-alert-msg" class="text-slate-600 text-sm whitespace-pre-line"></p>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Aviso</h3>
+                <p id="global-alert-msg" class="text-slate-600 dark:text-slate-300 text-sm whitespace-pre-line"></p>
             </div>
-            <div class="bg-slate-50 p-4 border-t border-slate-100 flex justify-center">
+            <div class="bg-slate-50 dark:bg-slate-900 p-4 border-t border-slate-100 flex justify-center">
                 <button id="global-alert-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow transition w-full max-w-[200px]">OK</button>
             </div>
         </div>
@@ -1049,17 +1354,106 @@
 
     <!-- MODAL GLOBAL DE CONFIRMAÇÃO -->
     <div id="global-modal-confirm" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300 relative">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300 relative">
             <div class="p-6 text-center">
                 <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                     <i data-lucide="alert-triangle" class="w-8 h-8"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-800 mb-2">Atenção!</h3>
-                <p id="global-confirm-msg" class="text-slate-600 text-sm whitespace-pre-line"></p>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Atenção!</h3>
+                <p id="global-confirm-msg" class="text-slate-600 dark:text-slate-300 text-sm whitespace-pre-line"></p>
             </div>
-            <div class="bg-slate-50 p-4 border-t border-slate-100 flex gap-3">
-                <button id="global-confirm-cancel" class="flex-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-lg transition">Cancelar</button>
+            <div class="bg-slate-50 dark:bg-slate-900 p-4 border-t border-slate-100 flex gap-3">
+                <button id="global-confirm-cancel" class="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-200 font-bold py-2 px-4 rounded-lg transition">Cancelar</button>
                 <button id="global-confirm-ok" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETECTOR DE DUPLICIDADE -->
+    <div id="modal-detector-duplicidade" class="fixed inset-0 bg-black/60 z-[80] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-5 flex justify-between items-center text-white">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white dark:bg-slate-800/20 p-2 rounded-lg"><i data-lucide="scan" class="w-6 h-6"></i></div>
+                    <div>
+                        <h2 class="text-xl font-bold">Detector de Duplicidade</h2>
+                        <p class="text-xs text-amber-100 opacity-90">Análise e unificação de munícipes com o mesmo CPF</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('modal-detector-duplicidade').classList.add('hidden')" class="hover:bg-white dark:bg-slate-800/20 p-2 rounded-full transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 relative" id="container-duplicidades">
+                <div class="flex items-center justify-center h-full text-slate-400">
+                    <div class="text-center">
+                        <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto mb-3"></i>
+                        <p>Analisando base de dados...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-between items-center">
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium" id="info-duplicidades"></p>
+                <button onclick="document.getElementById('modal-detector-duplicidade').classList.add('hidden')" class="bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold py-2 px-6 rounded-lg transition shadow-sm">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGENDA -->
+    <div id="modal-agenda" class="modal-overlay hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
+            <div class="bg-amber-500 p-6 text-white flex justify-between items-center shrink-0">
+                <h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="calendar" class="w-6 h-6"></i> <span id="titulo-modal-agenda">Novo Compromisso</span></h3>
+                <button onclick="fecharModalAgenda()" class="text-white hover:text-amber-200 transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="frmAgenda" onsubmit="salvarAgenda(event)">
+                    <input type="hidden" id="agenda_id">
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="label-field">Título / Descrição Curta</label>
+                            <input type="text" id="agenda_titulo" required class="input-field uppercase" placeholder="Ex: Reunião com Prefeito">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="label-field">Data</label>
+                                <input type="date" id="agenda_data" required class="input-field">
+                            </div>
+                            <div>
+                                <label class="label-field">Hora</label>
+                                <input type="time" id="agenda_hora" class="input-field">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="label-field">Categoria</label>
+                            <select id="agenda_categoria" required class="input-field bg-white dark:bg-slate-800">
+                                <option value="GABINETE">Gabinete / Interno</option>
+                                <option value="VISITA">Visita Externa / Reunião</option>
+                                <option value="EVENTO">Evento Público</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-field">Local / Endereço</label>
+                            <input type="text" id="agenda_local" class="input-field uppercase" placeholder="Local do compromisso">
+                        </div>
+                        <div>
+                            <label class="label-field">Envolvidos / Contatos</label>
+                            <input type="text" id="agenda_envolvidos" class="input-field uppercase" placeholder="Nomes ou CPFs relacionados">
+                        </div>
+                        <div>
+                            <label class="label-field">Detalhes / Pauta</label>
+                            <textarea id="agenda_detalhes" rows="3" class="input-field uppercase"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onclick="fecharModalAgenda()" class="px-5 py-2 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:bg-slate-950 rounded-lg transition">Cancelar</button>
+                        <button type="submit" id="btn-salvar-agenda" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-bold shadow-md transition flex items-center gap-2">
+                            Salvar Compromisso
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -1073,23 +1467,35 @@
             'js/ui.js',
             'js/ui-forms.js',
             'js/ui-tables.js',
+            'js/admin-panel.js',
             'js/charts.js',
             'js/api.js',
             'js/aniversariantes.js',
             'js/exporter.js',
+            'js/agenda.js',
+            'js/campanhas.js',
+            'js/zap-v2.js',
+            'js/darkmode.js',
             'js/main.js'
         ];
         // Adiciona um timestamp único para forçar o download dos scripts
         scripts.forEach(s => {
-            document.write('<script src="' + s + '?v=' + Date.now() + '"><\/script>');
+            document.write('<script src="' + s + '?v=' + Date.now() + '" charset="UTF-8"><\/script>');
         });
         
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => console.log('Service Worker Registrado!', reg.scope))
-                    .catch(err => console.error('Service Worker Falhou:', err));
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+                if (window.caches) {
+                    caches.keys().then(function(names) {
+                        for (let name of names) caches.delete(name);
+                    });
+                }
             });
         }
     </script>

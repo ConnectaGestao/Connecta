@@ -38,6 +38,7 @@ function adicionarProcedimentoNaLista() {
     const dataConclusao = document.getElementById('field_data_conclusao').value;
     const status = document.getElementById('field_status_atendimento').value; 
     const obs = document.getElementById('field_obs_atendimento').value;
+    const prioridade = document.getElementById('field_prioridade') ? document.getElementById('field_prioridade').value : '';
 
     if (!tipoServico && !procedimento && !especialidade) {
         showModalAlert("Preencha pelo menos o Tipo de Serviço, Especialidade ou Procedimento.");
@@ -59,7 +60,9 @@ function adicionarProcedimentoNaLista() {
         data_risco: dataRisco,
         data_conclusao: dataConclusao,
         status: status || (dataConclusao ? 'CONCLUIDO' : 'PENDENTE'),
-        obs_atendimento: obs
+        obs_atendimento: obs,
+        prioridade: prioridade,
+        anexos_link: document.getElementById('field_anexos_link') ? document.getElementById('field_anexos_link').value : ''
     };
 
     listaProcedimentosTemp.push(item);
@@ -68,7 +71,7 @@ function adicionarProcedimentoNaLista() {
     // Limpa campos do card
     ['field_especialidade', 'field_procedimento', 'field_local', 'field_tipo', 
      'field_valor', 'field_data_marcacao', 'field_data_risco', 'field_data_conclusao', 
-     'field_obs_atendimento', 'field_prontuario'].forEach(id => {
+     'field_obs_atendimento', 'field_anexos_link'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.value = '';
     });
@@ -156,7 +159,8 @@ async function submitAtendimento(e) {
             data_risco: document.getElementById('field_data_risco').value,
             data_conclusao: document.getElementById('field_data_conclusao').value,
             status: document.getElementById('field_status_atendimento').value,
-            obs_atendimento: document.getElementById('field_obs_atendimento').value
+            obs_atendimento: document.getElementById('field_obs_atendimento').value,
+            anexos_link: document.getElementById('field_anexos_link') ? document.getElementById('field_anexos_link').value : ''
         };
 
         if(await sendData('registerService', data, 'loading-atendimento')) { 
@@ -189,7 +193,7 @@ async function submitAtendimento(e) {
     });
 
     if(await sendData('registerServiceBatch', batch, 'loading-atendimento')) { 
-        // 1. LIMPEZA EXPLíCITA IMEDIATA PARA EVITAR DUPLICIDADE
+        // 1. LIMPEZA EXPLí CITA IMEDIATA PARA EVITAR DUPLICIDADE
         listaProcedimentosTemp = []; 
         renderizarTabelaProcedimentos(); // Atualiza a tabela visualmente para vazia
 
@@ -208,7 +212,7 @@ async function submitAtendimento(e) {
 }
 
 // ============================================================================
-// 5. FORMULíRIOS E PREENCHIMENTO
+// 5. FORMULí RIOS E PREENCHIMENTO
 // 5. FORMULí RIOS E PREENCHIMENTO
 // ============================================================================
 
@@ -245,6 +249,9 @@ function checkSelectNew(id) {
         document.getElementById(`field_${id}`).value = '';
     } else {
         document.getElementById(`field_${id}`).value = sel.value;
+        if (id === 'procedimento' && typeof aplicarValorPadraoProc === 'function') {
+            aplicarValorPadraoProc(sel.value);
+        }
     }
 }
 
@@ -471,7 +478,7 @@ function resetFormAtendimento(preserveSearch = false) {
     // RESTAURA MODO PADRÃƒÆ’O (NOVO)
     toggleModoEdicao(false);
 
-    // RESET DO PRONTUíRIO (Volta a ficar bloqueado)
+    // RESET DO PRONTUí RIO (Volta a ficar bloqueado)
     const prontuarioInput = document.getElementById('field_prontuario');
     if(prontuarioInput) {
         prontuarioInput.value = '';
@@ -506,16 +513,23 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
         btnDelete.classList.add('hidden');
     }
 
-    if(isEdit && dados) {
+        if(isEdit && dados) {
         document.getElementById('paciente_id_hidden').value = dados.id;
         
         const fields = [
             'nome','apelido','familia','rg','nascimento','sexo','tel1','tel2',
             'cep','logradouro','municipio_titulo','zona','secao','obs',
-            'sus', 'referencia', 'lideranca'
+            'sus', 'referencia', 'lideranca', 'nome_social', 'conjuge',
+            'profissao', 'cargo_eclesiastico', 'parentes', 'titulo', 'documentos_link'
         ];
         
         fields.forEach(k => { const el = document.getElementById(`field_${k}`); if(el) el.value = dados[k] || ''; });
+        
+        const elPront = document.getElementById('field_prontuario_paciente');
+        if(elPront) elPront.value = dados['prontuario'] || '';
+        
+        // Mostrar idade automaticamente ao editar
+        if(typeof calcularIdadeFormulario === 'function') calcularIdadeFormulario();
         
         const elMunicipio = document.getElementById('field_municipio');
         if (elMunicipio) elMunicipio.value = dados.municipio || dados.cidade || dados.Municipio || dados.Cidade || '';
@@ -530,6 +544,7 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
             if (typeof preencherSelectInteligente === 'function') preencherSelectInteligente(k, val); 
         });
         
+        const elDocumentos = document.getElementById('field_documentos_link'); if(elDocumentos) elDocumentos.value = dados.documentos_link || '';
         const elTitulo = document.getElementById('field_titulo'); if(elTitulo) elTitulo.value = dados.titulo || '';
         const elLogra = document.getElementById('field_logradouro'); if(elLogra) elLogra.value = dados.logradouro || dados.endereco || dados.Endereco || dados.Logradouro || ''; 
     }
@@ -550,7 +565,7 @@ function abrirEdicaoDireta(cpf, id) {
 }
 
 function abrirEdicaoAtendimento(at) {
-    // CORREÇÃƒÆ’O CRíTICA: Passa false para NÃƒÆ’O resetar o formulário
+    // CORREÇÃƒÆ’O CRí TICA: Passa false para NÃƒÆ’O resetar o formulário
     switchTab('form-atendimento', false);
     
     // Reset TOTAL pois estamos carregando um atendimento existente completo
@@ -575,7 +590,7 @@ function abrirEdicaoAtendimento(at) {
 
     document.getElementById('data_abertura').value = at.data_abertura || '';
     
-    // LOGICA DO PRONTUíRIO NA EDIÇÃƒÆ’O
+    // LOGICA DO PRONTUí RIO NA EDIÇÃƒÆ’O
     const prontuarioInput = document.getElementById('field_prontuario');
     const localVal = at.local ? at.local.toUpperCase() : '';
     
@@ -596,10 +611,11 @@ function abrirEdicaoAtendimento(at) {
     document.getElementById('field_data_conclusao').value = at.data_conclusao || '';
     document.getElementById('field_valor').value = at.valor || '';
     document.getElementById('field_obs_atendimento').value = at.obs_atendimento || '';
+    if (document.getElementById('field_anexos_link')) document.getElementById('field_anexos_link').value = at.anexos_link || '';
 
     ['tipo_servico','parceiro','especialidade','procedimento','local','tipo','status_atendimento'].forEach(k => {
         const val = k === 'status_atendimento' ? at.status : at[k];
-        preencherSelectInteligente(k, val);
+        if (typeof preencherSelectInteligente === 'function') preencherSelectInteligente(k, val);
     });
     
     const inpConclusao = document.getElementById('field_data_conclusao');
@@ -653,7 +669,7 @@ function abrirAtendimentoDireto(cpf, id) {
         if(hiddenNome) hiddenNome.value = paciente.nome;
         if(restoForm) restoForm.classList.remove('hidden');
         
-        // Foca no primeiro campo íºtil
+        // Foca no primeiro campo útil
         const dataInput = document.getElementById('data_abertura');
         if(dataInput) dataInput.focus();
         
@@ -667,24 +683,13 @@ function abrirAtendimentoDireto(cpf, id) {
     if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-async function submitPaciente(e) {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.target).entries());
-    data.cpf = document.getElementById('paciente_cpf_check').value;
-    if(!data.cpf || data.cpf.length < 5) { showModalAlert("CPF obrigatório."); return; }
-    
-    if(await sendData('registerPatient', data, 'loading-paciente')) { 
-        if(typeof resetFormPaciente === 'function') resetFormPaciente(); 
-        if(typeof voltarInicio === 'function') voltarInicio(); 
-    }
-}
+// submitPaciente is defined in api.js (handles both create and update correctly)
 
 function calcularDataRisco() {
     const dataMarcacao = document.getElementById('field_data_marcacao').value;
     const campoEspec = document.getElementById('field_especialidade');
     if(!dataMarcacao) return;
 
-    // Ajuste para evitar fuso horário que volta um dia
     const [ano, mes, dia] = dataMarcacao.split('-').map(Number);
     const d = new Date(ano, mes - 1, dia);
 
@@ -700,13 +705,54 @@ function calcularDataRisco() {
 
 // ============================================================================
 // 6. FUNÇÕES DE EXCLUSÃO (UI HANDLERS)
-// ============================================================================
+async function confirmarExclusaoPaciente(forceId = null, forceNome = null) {
+    let finalId = forceId;
+    let nome = forceNome || 'este munícipe';
+    let cpf = '';
 
-async function confirmarExclusaoPaciente() {
-    if(!pacienteAtual) return;
-    const confirmacao = await showModalConfirm(`ATENÇÃO: Você está prestes a excluir o munícipe ${pacienteAtual.nome}.\n\nISSO APAGARÁ TAMBÉM TODOS OS ATENDIMENTOS DELE.\n\nTem certeza absoluta?`);
+    if(!finalId) {
+        const hiddenId = document.getElementById('paciente_id_hidden') ? document.getElementById('paciente_id_hidden').value : '';
+        finalId = hiddenId;
+    }
+    
+    if (!finalId && typeof pacienteAtual !== 'undefined' && pacienteAtual && pacienteAtual.id) {
+        finalId = pacienteAtual.id;
+        nome = pacienteAtual.nome || nome;
+        cpf = pacienteAtual.cpf || cpf;
+    }
+    
+    if (!finalId && typeof histPacienteAtual !== 'undefined' && histPacienteAtual && histPacienteAtual.id) {
+        finalId = histPacienteAtual.id;
+        nome = histPacienteAtual.nome || nome;
+        cpf = histPacienteAtual.cpf || cpf;
+    }
+
+    if (!finalId) {
+        const btnHistDelete = document.getElementById('btn-hist-delete');
+        if (btnHistDelete && !btnHistDelete.closest('.hidden')) {
+            finalId = btnHistDelete.getAttribute('data-id');
+            cpf = btnHistDelete.getAttribute('data-cpf');
+            const hNome = document.getElementById('hist-nome');
+            if(hNome) nome = hNome.innerText;
+        }
+    }
+
+    if (!finalId && !cpf) {
+        // Tenta buscar o CPF direto do campo na tela como último recurso (Nível Apelão)
+        const cpfNaTela = document.getElementById('paciente_cpf_check');
+        if (cpfNaTela && cpfNaTela.value && cpfNaTela.value.length > 5) {
+            cpf = cpfNaTela.value;
+        }
+    }
+
+    if (!finalId && !cpf) {
+        showModalAlert("Erro: Não foi possível identificar o ID ou CPF do munícipe na página. Feche a tela e tente novamente.");
+        return;
+    }
+
+    const confirmacao = await showModalConfirm(`ATENÇÃO: Você está prestes a excluir ${nome}.\n\nISSO APAGARÁ TAMBÉM TODOS OS ATENDIMENTOS DELE.\n\nTem certeza absoluta?`);
     if(confirmacao) {
-        if(typeof excluirPacienteAPI === 'function') excluirPacienteAPI(pacienteAtual.id, pacienteAtual.cpf);
+        if(typeof excluirPacienteAPI === 'function') excluirPacienteAPI(finalId, cpf);
     }
 }
 
@@ -719,4 +765,226 @@ async function confirmarExclusaoAtendimento() {
     }
 }
 
-// ============================================================================
+// ============================================================================
+
+window.irParaAtendimento = function() {
+    const cpf = document.getElementById('paciente_cpf_check').value;
+    let id = document.getElementById('paciente_id_hidden').value;
+    const cpfNum = document.getElementById('paciente_cpf_check').value;
+    if(!id && window.pacienteExclusaoTemporaria) {
+        id = window.pacienteExclusaoTemporaria;
+    }
+    if(typeof abrirAtendimentoDireto === 'function') {
+        abrirAtendimentoDireto(cpf, id);
+    }
+};
+
+window.gerarCpfAutomatico = function() {
+    const min = 100000000;
+    const max = 999999999;
+    const randomFicticio = Math.floor(Math.random() * (max - min + 1)) + min;
+    const ficticioCpf = "00" + randomFicticio;
+    const formatado = ficticioCpf.substring(0,3) + "." + ficticioCpf.substring(3,6) + "." + ficticioCpf.substring(6,9) + "-" + ficticioCpf.substring(9,11);
+    const input = document.getElementById('paciente_cpf_check');
+    if(input) {
+        input.value = formatado;
+        if(typeof verificarCpfInicial === 'function') verificarCpfInicial();
+    }
+};
+
+window.destravarEndereco = function() {
+    ['field_municipio', 'field_bairro'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.readOnly = false;
+            el.classList.remove('bg-slate-100', 'cursor-not-allowed');
+            el.classList.add('bg-white');
+        }
+    });
+};
+
+window.calcularIdadeFormulario = function() {
+    const campoData = document.getElementById('field_nascimento').value;
+    const spanIdade = document.getElementById('idade_calc');
+    if(!campoData || !spanIdade) return;
+    const nac = new Date(campoData);
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nac.getFullYear();
+    const m = hoje.getMonth() - nac.getMonth();
+    if(m < 0 || (m === 0 && hoje.getDate() < nac.getDate())) {
+        idade--;
+    }
+    spanIdade.innerText = ( anos);
+};
+
+// ============================================================================
+// 7. DETECTOR DE DUPLICIDADE
+// ============================================================================
+
+window.abrirDetectorDuplicidade = async function() {
+    const modal = document.getElementById('modal-detector-duplicidade');
+    const container = document.getElementById('container-duplicidades');
+    const info = document.getElementById('info-duplicidades');
+    
+    modal.classList.remove('hidden');
+    container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400"><div class="text-center"><i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto mb-3"></i><p>Analisando base de dados...</p></div></div>';
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Aguarda um pequeno instante para renderizar o loader
+    await new Promise(r => setTimeout(r, 100));
+
+    const grupos = {};
+    if (typeof todosPacientes === 'undefined' || !todosPacientes) return;
+    
+    todosPacientes.forEach(p => {
+        if (!p.cpf) return;
+        const cpfLimpo = String(p.cpf).replace(/\D/g, '');
+        if (cpfLimpo.length < 11) return;
+        
+        if (!grupos[cpfLimpo]) grupos[cpfLimpo] = [];
+        grupos[cpfLimpo].push(p);
+    });
+
+    const duplicidades = [];
+    for (let cpf in grupos) {
+        if (grupos[cpf].length > 1) {
+            duplicidades.push(grupos[cpf]);
+        }
+    }
+
+    if (duplicidades.length === 0) {
+        container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400"><div class="text-center"><i data-lucide="check-circle" class="w-12 h-12 text-emerald-500 mx-auto mb-3"></i><p class="text-lg font-bold text-slate-600">Tudo certo!</p><p>Nenhum CPF duplicado foi encontrado na base.</p></div></div>';
+        info.innerText = '0 duplicidades encontradas';
+        if(typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+
+    info.innerText = `${duplicidades.length} CPF(s) com multiplicidade encontrados`;
+    renderizarDuplicidades(duplicidades);
+};
+
+function calcularScorePaciente(p) {
+    let score = 0;
+    const camposImportantes = [
+        'nome', 'nascimento', 'rg', 'sexo', 'tel1', 'tel2', 'whatsapp', 
+        'cep', 'logradouro', 'numero', 'bairro', 'municipio', 
+        'sus', 'titulo', 'zona', 'secao', 'status_titulo',
+        'profissao', 'lideranca', 'referencia', 'parentes', 'obs'
+    ];
+    
+    camposImportantes.forEach(c => {
+        if (p[c] && String(p[c]).trim() !== '' && p[c] !== 'undefined') score++;
+    });
+    
+    // Dar um bônus forte se o nome for mais longo (menos chance de ser apelido)
+    if (p.nome && String(p.nome).length > 10) score += 2;
+    
+    return score;
+}
+
+window.renderizarDuplicidades = function(duplicidades) {
+    const container = document.getElementById('container-duplicidades');
+    container.innerHTML = '';
+    
+    window.duplicidadesCache = duplicidades;
+
+    duplicidades.forEach((grupo, index) => {
+        // Calcula o score de cada um
+        grupo.forEach(p => p._score = calcularScorePaciente(p));
+        
+        // Ordena do maior score pro menor
+        grupo.sort((a, b) => b._score - a._score);
+        
+        const principal = grupo[0];
+        const formatedCpf = principal.cpf || 'N/I';
+
+        const divGrupo = document.createElement('div');
+        divGrupo.className = 'bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-hidden';
+        
+        let html = `<div class="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-amber-500"></i>
+                <h3 class="font-bold text-slate-700">CPF: ${formatedCpf}</h3>
+                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full">${grupo.length} cadastros</span>
+            </div>
+        </div><div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+
+        grupo.forEach((p, pIndex) => {
+            const isPrincipal = pIndex === 0;
+            const cardClass = isPrincipal ? 'border-emerald-500 bg-emerald-50 shadow-md ring-2 ring-emerald-500/20' : 'border-slate-200 bg-white hover:border-amber-300';
+            const badge = isPrincipal ? '<span class="absolute -top-3 -right-3 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1"><i data-lucide="star" class="w-3 h-3"></i> Sugerido</span>' : '';
+            
+            const dCria = p.data_criacao ? p.data_criacao.split('T')[0].split('-').reverse().join('/') : 'N/I';
+            const safeNomeHtml = p.nome ? String(p.nome).replace(/'/g, "\\'").replace(/"/g, "&quot;") : 'SEM NOME';
+            const safeCpf = formatedCpf.replace(/\D/g, '');
+            
+            html += `
+                <div class="border rounded-lg p-4 relative transition-all ${cardClass}">
+                    ${badge}
+                    <div class="font-bold text-slate-800 text-sm uppercase mb-1">${p.nome || 'SEM NOME'}</div>
+                    <div class="text-xs text-slate-500 mb-3 space-y-1">
+                        <div><i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i> ${p.nascimento ? p.nascimento.split('-').reverse().join('/') : '-'}</div>
+                        <div><i data-lucide="phone" class="w-3 h-3 inline mr-1"></i> ${p.tel || p.tel1 || p.whatsapp || p.telefone || '-'}</div>
+                        <div><i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> ${p.bairro || '-'}</div>
+                        <div><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i> Criado: ${dCria}</div>
+                    </div>
+                    <div class="flex justify-between items-center mt-4 border-t pt-3">
+                        <span class="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded border">${p._score} pts</span>
+                        ${!isPrincipal ? `<button onclick="executarExclusaoDuplicata(this, '${p.id}', '${principal.id}', '${safeNomeHtml}', '${safeCpf}')" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 transition px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 shadow-sm"><i data-lucide="trash-2" class="w-3 h-3"></i> Excluir</button>` : `<span class="text-xs font-bold text-emerald-600 flex items-center gap-1"><i data-lucide="check" class="w-4 h-4 inline"></i> Principal</span>`}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        divGrupo.innerHTML = html;
+        container.appendChild(divGrupo);
+    });
+    
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.executarExclusaoDuplicata = async function(btn, idFraco, idPrincipal, nomeFraco, cpf) {
+    if ((!idFraco || idFraco === 'undefined') && !cpf) {
+        showModalAlert("Erro: IDs inválidos para exclusão e mesclagem. Recarregue a página.");
+        return;
+    }
+    
+    const safeNome = nomeFraco ? String(nomeFraco).replace(/&quot;/g, '"').replace(/\\'/g, "'") : 'Desconhecido';
+    const confirmacao = await showModalConfirm(`Você está prestes a excluir o cadastro de:\n\n${safeNome}\n\nTodos os Atendimentos vinculados a este cadastro serão MERGEADOS (transferidos) para o cadastro Principal.\n\nTem certeza absoluta?`);
+    
+    if(confirmacao) {
+        let originalHtml = '';
+        try {
+            originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader" class="w-3 h-3 animate-spin"></i>';
+            btn.disabled = true;
+            
+            if(typeof mesclarExcluirDuplicataAPI === 'function') {
+                await mesclarExcluirDuplicataAPI(idFraco, idPrincipal, cpf);
+                showMessage("Cadastro duplicado excluído e histórico migrado com sucesso!", "success");
+                
+                // Remove o elemento da interface imediatamente para dar feedback rápido
+                const card = btn.closest('.relative');
+                if(card) {
+                    card.classList.add('opacity-50', 'pointer-events-none');
+                    card.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-white/80"><span class="text-red-500 font-bold text-sm">Excluído</span></div>';
+                }
+                
+                // Recarrega os dados globais em background
+                setTimeout(() => {
+                    if(typeof carregarListaPacientes === 'function') carregarListaPacientes();
+                }, 1000);
+            } else {
+                throw new Error("Função de mesclagem não encontrada na API.");
+            }
+        } catch(e) {
+            console.error("Erro no executarExclusaoDuplicata:", e);
+            if (btn && originalHtml) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+            showModalAlert("Erro ao limpar duplicidade: " + (e.message || e));
+        }
+    }
+};

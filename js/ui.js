@@ -116,11 +116,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     const snap = await window.getDocs(q);
                     
                     if (!snap.empty) {
-                        const userData = snap.docs[0].data();
-                        const userProfile = (userData.perfil || '').toUpperCase();
-                        const userRole = (userData.role || '').toUpperCase();
-                        if (userProfile === 'ADMIN' || userRole === 'ADMIN') {
-                            isAdmin = true;
+                        for (let doc of snap.docs) {
+                            const userData = doc.data();
+                            const userProfile = (userData.perfil || '').toString().trim().toUpperCase();
+                            const userRole = (userData.role || '').toString().trim().toUpperCase();
+                            if (userProfile === 'ADMIN' || userRole === 'ADMIN') {
+                                isAdmin = true;
+                                break;
+                            }
                         }
                     } else {
                         // Cria um usuário Visitante padrão caso não exista
@@ -266,6 +269,12 @@ function aplicarPermissoes() {
         else navAdmin.classList.add('hidden');
     }
 
+    const btnDetector = document.getElementById('btn-detector-duplicidade');
+    if(btnDetector) {
+        if(currentUserRole === 'ADMIN') btnDetector.classList.remove('hidden');
+        else btnDetector.classList.add('hidden');
+    }
+
     const botoesAcao = document.querySelectorAll('.btn-action, .btn-delete');
     botoesAcao.forEach(btn => {
         if(isVisitor) btn.classList.add('hidden');
@@ -323,24 +332,23 @@ function switchTab(tabId, shouldReset = true) {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
     // Fecha o menu mobile ao navegar
-    if (typeof toggleMobileMenu === 'function' && window.innerWidth < 768) {
+    if (typeof toggleMobileMenu === "function" && window.innerWidth < 768) {
         toggleMobileMenu(true);
     }
 
     const views = [
-        'view-lista-pacientes', 'view-lista-atendimentos', 
-        'view-form-paciente', 'view-form-atendimento', 
-        'view-dashboard', 'view-relatorios', 'view-listagens',
-        'view-parceiros', 'view-historico-paciente', 
-        'view-detalhe-atendimento', 'view-exportacao',
-        'view-admin-panel', 'view-aniversariantes'
+        "view-lista-pacientes", "view-lista-atendimentos", 
+        "view-form-paciente", "view-form-atendimento", 
+        "view-dashboard", "view-relatorios", "view-listagens",
+        "view-parceiros", "view-historico-paciente", 
+        "view-detalhe-atendimento", "view-exportacao",
+        "view-admin-panel", "view-aniversariantes", "view-agenda", "view-campanhas"
     ];
     
     views.forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.classList.add('hidden');
+        if(el) el.classList.add("hidden");
     });
-    
     const target = document.getElementById('view-' + tabId);
     if(target) target.classList.remove('hidden');
     
@@ -512,4 +520,13 @@ function abrirListaRelatorio(tipo, index) {
     });
 }
 
-// ============================================================================
+// Block Enter key submission
+window.addEventListener('keydown', function(e) {
+    if(e.key === 'Enter' && e.target.tagName === 'INPUT') {
+        const form = e.target.closest('form');
+        if(form && (form.id === 'frmPaciente' || form.id === 'frmAtendimento')) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});

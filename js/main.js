@@ -4,6 +4,19 @@
  * Inicializa bibliotecas e configura eventos globais.
  */
 
+window.calcularIdade = function(dataNascimento) {
+    if (!dataNascimento) return '';
+    const hoje = new Date();
+    const nasc = new Date(dataNascimento + 'T00:00:00');
+    if (isNaN(nasc.getTime())) return '';
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
+        idade--;
+    }
+    return `${idade} anos`;
+};
+
 window.onload = function() {
     // 1. Inicializa ícones (Lucide)
     if(typeof lucide !== 'undefined') lucide.createIcons();
