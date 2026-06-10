@@ -833,7 +833,10 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
                     <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="calendar" class="text-amber-500"></i> Agenda Oficial</h2>
                     <p class="text-slate-500 dark:text-slate-400 text-sm">Compromissos do Gabinete e Visitas Externas</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 print:hidden">
+                    <button onclick="window.print()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold shadow-sm flex items-center gap-2 transition">
+                        <i data-lucide="printer" class="w-4 h-4"></i> Imprimir
+                    </button>
                     <button onclick="abrirModalAgenda()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm flex items-center gap-2 transition">
                         <i data-lucide="plus" class="w-4 h-4"></i> Novo Compromisso
                     </button>

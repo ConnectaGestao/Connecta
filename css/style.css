@@ -152,13 +152,18 @@ html.dark .gender-tower {
         display: none !important;
     }
 
-    /* Esconde todas as divs filhas do main, exceto a printable-area */
-    main > div:not(#printable-area) {
+    /* Esconde todas as divs filhas do main que estão com a classe 'hidden' */
+    main > div.hidden {
+        display: none !important;
+    }
+
+    /* Esconde divs que não são a printable-area nem o view-agenda */
+    main > div:not(#printable-area):not(#view-agenda) {
         display: none !important;
     }
 
     /* Configura a área de impressão para aparecer */
-    #printable-area {
+    #printable-area, #view-agenda {
         display: block !important;
         position: absolute;
         top: 0;
@@ -170,9 +175,20 @@ html.dark .gender-tower {
         z-index: 9999;
     }
 
-    /* Garante que o conteúdo do printable-area seja visível */
-    #printable-area * {
+    /* Garante que o conteúdo seja visível */
+    #printable-area *, #view-agenda * {
         visibility: visible !important;
+    }
+
+    /* Esconde os filtros e botões da agenda na hora de imprimir */
+    #view-agenda .md\:w-1\/4, 
+    #view-agenda button,
+    .print\:hidden {
+        display: none !important;
+    }
+    
+    #view-agenda .md\:w-3\/4 {
+        width: 100% !important;
     }
 
     /* Reseta configurações de scroll do body para imprimir tudo */
