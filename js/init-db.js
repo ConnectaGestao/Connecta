@@ -21,7 +21,7 @@ const DB_SEED = {
 };
 
 window.seedInitialData = async function() {
-    alert("Iniciando seedInitialData via botão ou auto...");
+    console.log("Iniciando seedInitialData via botão ou auto...");
     localStorage.setItem('seed_run', 'false'); // reset the local storage just in case
     if(!window.db) {
         alert("Firebase DB não carregado!");
