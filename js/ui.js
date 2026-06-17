@@ -106,46 +106,45 @@ document.addEventListener("DOMContentLoaded", function() {
             if (user) {
                 const email = user.email.toLowerCase();
                 let isAdmin = false;
+                
+                // 1. Tenta ler da coleção oficial 'usuarios' primeiro
                 try {
-                    // Tenta ler da coleção 'users' primeiro
-                    const qUsers = window.query(window.collection(window.db, "users"), window.where("email", "==", email));
-                    const snapUsers = await window.getDocs(qUsers);
-                    if (!snapUsers.empty) {
-                        for (let doc of snapUsers.docs) {
+                    const qUsuarios = window.query(window.collection(window.db, "usuarios"), window.where("email", "==", email));
+                    const snapUsuarios = await window.getDocs(qUsuarios);
+                    if (!snapUsuarios.empty) {
+                        for (let doc of snapUsuarios.docs) {
                             const data = doc.data();
                             if ((data.perfil || '').toUpperCase() === "ADMIN" || (data.role || '').toUpperCase() === "ADMIN") {
                                 isAdmin = true; break;
                             }
                         }
                     }
-                    
-                    // Se não achou ou não é admin, tenta 'usuarios'
-                    if (!isAdmin) {
-                        const qUsuarios = window.query(window.collection(window.db, "usuarios"), window.where("email", "==", email));
-                        const snapUsuarios = await window.getDocs(qUsuarios);
-                        if (!snapUsuarios.empty) {
-                            for (let doc of snapUsuarios.docs) {
+                } catch(e) { console.warn("Erro ao ler usuarios", e); }
+                
+                // 2. Se não achou, tenta a coleção 'users' (legado)
+                if (!isAdmin) {
+                    try {
+                        const qUsers = window.query(window.collection(window.db, "users"), window.where("email", "==", email));
+                        const snapUsers = await window.getDocs(qUsers);
+                        if (!snapUsers.empty) {
+                            for (let doc of snapUsers.docs) {
                                 const data = doc.data();
                                 if ((data.perfil || '').toUpperCase() === "ADMIN" || (data.role || '').toUpperCase() === "ADMIN") {
                                     isAdmin = true; break;
                                 }
                             }
-                        }
-                    }
-                    
-                    // Só tenta adicionar se for a primeira vez e NÃO tiver dado erro antes (evita quebrar)
-                    if (!isAdmin && snapUsers.empty) {
-                        try {
-                            await window.addDoc(window.collection(window.db, "users"), {
+                        } else {
+                            // Tenta adicionar se for a primeira vez
+                            await window.addDoc(window.collection(window.db, "usuarios"), {
                                 email: email,
                                 perfil: "VISITOR",
                                 role: "user",
                                 criadoEm: new Date().toISOString()
                             });
-                        } catch(e) { console.warn("Não foi possível criar o usuário no banco (permissão bloqueada para auto-cadastro)"); }
-                    }
-                } catch(e) { console.error("Erro ao buscar perfil", e); }
-                
+                        }
+                    } catch(e) { console.warn("Erro ao buscar/criar em users legado", e); }
+                }
+
                 // FALLBACK SEGURO
                 if (!isAdmin) {
                     if (email.includes('igor') || email.includes('admin') || email.includes('gestao')) {
