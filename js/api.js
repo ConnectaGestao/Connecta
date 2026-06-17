@@ -22,7 +22,11 @@ const VALORES_PADRAO = {
     'ATENDIMENTO': ['CONSULTA AGENDADA', 'CONSULTA EMERGENCIAL', 'CONSULTA PRÉ OPERATORIA', 'ENCAMINHAMENTOS', 'EXAMES', 'INTERNAÇÃO CIRURGICA', 'ORIENTAÇÕES', 'PROCEDIMENTOS'],
     'ESPECIALIDADE': ['GINECOLOGIA', 'ORTOPEDISTA', 'CLINICO GERAL', 'PEDIATRA', 'CIRURGIÃO INFANTIL', 'CIRURGIÃO ADULTO', 'IMAGENS'],
     'PROCEDIMENTO_EXAMES': ['USG', 'TC', 'RNM', 'ECG', 'DOPLLER', 'OFTALMOLÓGICOS'],
-    'TIPOS_EXAME': ['RNM CRANIO', 'RNM PELVE', 'TC FACE', 'OCT', 'MAPEAMENTO RETINA']
+    'TIPOS_EXAME': ['RNM CRANIO', 'RNM PELVE', 'TC FACE', 'OCT', 'MAPEAMENTO RETINA'],
+    'STATUS_TITULO': ['REGULAR', 'CANCELADO', 'SUSPENSO', 'NÃO POSSUI'],
+    'LIDERANCA': [],
+    'LOCAL': [],
+    'PARCEIRO': []
 };
 
 async function carregarFiltros() {
@@ -38,13 +42,27 @@ async function carregarFiltros() {
     }, 5000);
 
     try {
-        const querySnapshot = await window.getDocs(window.collection(window.db, "filtros"));
+        if (window.auth && !window.auth.currentUser) {
+            await new Promise(resolve => {
+                const unsubscribe = window.auth.onAuthStateChanged(user => {
+                    unsubscribe();
+                    resolve();
+                });
+            });
+        }
+        
+        // Se ainda não estiver logado, não tente buscar no firestore
+        if (window.auth && !window.auth.currentUser) return;
+        
+        const querySnapshot = await window.getDocs(window.collection(window.db, "config_selects"));
         const resultData = {};
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            const cat = data.categoria;
-            if(!resultData[cat]) resultData[cat] = [];
-            if(!resultData[cat].includes(data.valor)) resultData[cat].push(data.valor);
+            const cat = data.tipo || data.chave;
+            if(cat && data.valor) {
+                if(!resultData[cat]) resultData[cat] = [];
+                if(!resultData[cat].includes(data.valor)) resultData[cat].push(data.valor);
+            }
         });
 
         clearTimeout(safety);
@@ -92,8 +110,6 @@ function popularSelectComPadroes(sel, key, listaExtra) {
     Array.from(conjuntoUnico).sort().forEach(op => {
         if(op) sel.innerHTML += `<option value="${op}">${op}</option>`;
     });
-    
-    sel.innerHTML += '<option value="__NEW__" class="font-bold text-blue-600 border-t">+ Cadastrar Novo</option>';
 }
 
 async function saveNewFilter(category, value) {
@@ -132,10 +148,10 @@ async function carregarListaPacientes() {
         });
         
         // Ordena em memória para evitar exclusão de docs sem data_criacao
-        pacientes.sort((a, b) => {
-            const d1 = a.data_criacao || '';
-            const d2 = b.data_criacao || '';
-            return d2.localeCompare(d1);
+        pacientes.sort((a,b) => {
+            const n1 = (a.nome || '').toLowerCase();
+            const n2 = (b.nome || '').toLowerCase();
+            return n1.localeCompare(n2);
         });
         
         todosPacientes = pacientes;
@@ -150,14 +166,44 @@ async function carregarListaPacientes() {
     }
 }
 
+window.tabPacientesAtual = 'COMPLETOS'; // 'COMPLETOS' ou 'PRE'
+
+function mudarTabPacientes(tab) {
+    window.tabPacientesAtual = tab;
+    document.getElementById('tab-pacientes-completos').classList.remove('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+    document.getElementById('tab-pacientes-completos').classList.add('border-transparent', 'text-slate-500');
+    document.getElementById('tab-pacientes-pre').classList.remove('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+    document.getElementById('tab-pacientes-pre').classList.add('border-transparent', 'text-slate-500');
+    
+    if (tab === 'COMPLETOS') {
+        document.getElementById('tab-pacientes-completos').classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+        document.getElementById('tab-pacientes-completos').classList.remove('border-transparent', 'text-slate-500');
+    } else {
+        document.getElementById('tab-pacientes-pre').classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+        document.getElementById('tab-pacientes-pre').classList.remove('border-transparent', 'text-slate-500');
+    }
+    filtrarPacientesNaTela();
+}
+
 function filtrarPacientesNaTela() {
     const termo = document.getElementById('filtro-paciente-input').value.toLowerCase();
-    const filtrados = todosPacientes.filter(p => {
+    
+    // Filtra pela aba (Completos vs Pré Cadastro)
+    let porAba = todosPacientes.filter(p => {
+        if (window.tabPacientesAtual === 'PRE') {
+            return p.pre_cadastro === true;
+        } else {
+            return !p.pre_cadastro;
+        }
+    });
+
+    const filtrados = porAba.filter(p => {
         const nome = p.nome ? String(p.nome).toLowerCase() : '';
         const cpf = p.cpf ? String(p.cpf) : '';
         const municipio = p.municipio ? String(p.municipio).toLowerCase() : '';
         return nome.includes(termo) || cpf.includes(termo) || municipio.includes(termo);
     });
+    
     if(typeof renderizarPaginaPacientes === 'function') {
         window.paginacaoPacientes.dadosFiltrados = filtrados;
         window.paginacaoPacientes.paginaAtual = 1;
@@ -283,9 +329,13 @@ async function verificarCpfInicial() {
     pacienteAtual = null;
 
     try {
-        const searchCpf = String(cpf).replace(/\\D/g, '');
-        const q = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", searchCpf));
-        const querySnapshot = await window.getDocs(q);
+        const searchCpf = String(cpf).replace(/\D/g, '');
+        const searchCpfFormatado = searchCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        let querySnapshot = await window.getDocs(window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", searchCpf)));
+        
+        if (querySnapshot.empty && searchCpfFormatado.length === 14) {
+            querySnapshot = await window.getDocs(window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", searchCpfFormatado)));
+        }
         
         loading.classList.add('hidden'); loading.classList.remove('flex');
         if(!querySnapshot.empty) {
@@ -341,10 +391,30 @@ function editarPaciente() {
 async function submitPaciente(e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target).entries());
-    const rawCpf = document.getElementById('paciente_cpf_check').value;
-    data.cpf = String(rawCpf).replace(/\\D/g, '');
+    let rawCpf = document.getElementById('paciente_cpf_check').value;
     
-    if(!data.cpf || data.cpf.length < 5) { showModalAlert("CPF obrigatório."); return; }
+    // Se o CPF no form estiver preenchido (mesmo no pré-cadastro), usá-lo
+    const cpfFormInput = document.getElementById('field_cpf_form');
+    if (cpfFormInput && cpfFormInput.value) {
+        rawCpf = cpfFormInput.value;
+    }
+    
+    data.cpf = String(rawCpf).replace(/\D/g, '');
+    delete data.cpf_form; // Remove duplicate key from formData
+    
+    try {
+        data.arquivos_anexos = JSON.parse(data.arquivos_json || '[]');
+    } catch(e) {
+        data.arquivos_anexos = [];
+    }
+    delete data.arquivos_json;
+    
+    const isPreCadastro = (window.tipoCadastroAtual === 'PRE' && (!data.cpf || data.cpf.length < 5));
+    data.pre_cadastro = isPreCadastro;
+    
+    if(!isPreCadastro) {
+        if(!data.cpf || data.cpf.length < 5) { showModalAlert("CPF obrigatório para Cadastro Completo."); return; }
+    }
     
     const loading = document.getElementById('loading-paciente');
     setLoadingText('loading-paciente', "Salvando...");
@@ -362,12 +432,20 @@ async function submitPaciente(e) {
         let acao = 'criar';
         let dadosAnteriores = null;
         
-        // Verifica se CPF já existe para evitar duplicidades
-        const checkQ = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", data.cpf));
-        const checkSnap = await window.getDocs(checkQ);
+        // Verifica se CPF já existe para evitar duplicidades (apenas se tiver CPF)
+        let hasDuplicate = false;
+        let existingDocId = null;
+        if (data.cpf && data.cpf.length >= 5) {
+            const checkQ = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", data.cpf));
+            const checkSnap = await window.getDocs(checkQ);
+            if (!checkSnap.empty) {
+                hasDuplicate = true;
+                existingDocId = checkSnap.docs[0].id;
+            }
+        }
         
         if (!docId) {
-            if (!checkSnap.empty) {
+            if (hasDuplicate) {
                 showModalAlert("Erro: Este CPF já está cadastrado no sistema!");
                 if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
                 return;
@@ -377,9 +455,8 @@ async function submitPaciente(e) {
             const docRef = await window.addDoc(window.collection(window.db, "pacientes"), data);
             docId = docRef.id;
         } else {
-            if (!checkSnap.empty) {
-                const existingDoc = checkSnap.docs[0];
-                if (existingDoc.id !== docId) {
+            if (hasDuplicate) {
+                if (existingDocId !== docId) {
                     showModalAlert("Erro: Este CPF já pertence a outro munícipe!");
                     if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
                     return;
@@ -456,7 +533,7 @@ window.submitAtendimentoAPI = async (batch) => {
 
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
         showMessage(docsAtualizados > 1 ? 'Atendimentos salvos com sucesso!' : 'Atendimento salvo com sucesso!', 'success');
-        if(typeof window.logAuditoria === 'function') window.logAuditoria('SALVAR_ATENDIMENTO', 'ATENDIMENTOS', 'Prontuário/Data: ' + dataAbertura);
+        if(typeof window.logAuditoria === 'function') window.logAuditoria('SALVAR_ATENDIMENTO', 'ATENDIMENTOS', 'Prontuário/Data: ' + batch[0]?.data_abertura || new Date().toISOString());
         return true;
     } catch (err) {
         if(loading) { loading.classList.add('hidden'); loading.classList.remove('flex'); }
@@ -478,9 +555,13 @@ async function buscarPacienteParaAtendimento() {
     document.getElementById('resto-form-atendimento').classList.add('hidden');
     
     try {
-        const searchCpf = String(termo).replace(/\\D/g, '');
-        const q = window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", searchCpf));
-        const querySnapshot = await window.getDocs(q);
+        const searchCpf = String(termo).replace(/\D/g, '');
+        const searchCpfFormatado = searchCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        
+        let querySnapshot = await window.getDocs(window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", searchCpf)));
+        if (querySnapshot.empty && searchCpfFormatado.length === 14) {
+            querySnapshot = await window.getDocs(window.query(window.collection(window.db, "pacientes"), window.where("cpf", "==", searchCpfFormatado)));
+        }
         
         if(!querySnapshot.empty) {
             const doc = querySnapshot.docs[0];
@@ -511,9 +592,9 @@ async function carregarListaAtendimentos() {
         });
         
         atendimentos.sort((a, b) => {
-            const d1 = a.data_abertura || '';
-            const d2 = b.data_abertura || '';
-            return d2.localeCompare(d1);
+            const n1 = (a.nome_paciente || '').toLowerCase();
+            const n2 = (b.nome_paciente || '').toLowerCase();
+            return n1.localeCompare(n2);
         });
         
         todosAtendimentos = atendimentos;
@@ -1408,3 +1489,198 @@ window.logAuditoria = async function(acao, modulo, detalhes) {
         console.error('Erro ao registrar auditoria:', e);
     }
 };
+
+window.extrairDadosParaListas = async function() {
+    try {
+        if(!window.db) return;
+        if(typeof showMessage === 'function') showMessage('Extraindo dados antigos para listas genéricas. Aguarde...', 'info');
+        
+        const inDb = new Set();
+        const snapConfig = await window.getDocs(window.collection(window.db, 'config_selects'));
+        snapConfig.forEach(d => {
+            const data = d.data();
+            if(data.chave && data.valor) {
+                inDb.add(`${data.chave}_${data.valor.toUpperCase().trim()}`);
+            }
+        });
+
+        async function addIfNew(chave, valor) {
+            if(!valor || typeof valor !== 'string') return;
+            const normVal = valor.toUpperCase().trim();
+            if(normVal === '' || normVal === 'SELECIONE...' || normVal === 'NÃO' || normVal === 'SIM') return;
+            const uid = `${chave}_${normVal}`;
+            if(!inDb.has(uid)) {
+                await window.addDoc(window.collection(window.db, 'config_selects'), {
+                    chave: chave,
+                    valor: normVal,
+                    criacao: new Date().toISOString()
+                });
+                inDb.add(uid);
+            }
+        }
+
+        // 1. Lideranças (da coleção antiga)
+        try {
+            const snapLider = await window.getDocs(window.collection(window.db, 'liderancas'));
+            for(let doc of snapLider.docs) {
+                await addIfNew('LIDERANCA', doc.data().nome);
+            }
+        } catch(e) { console.log('Sem coleção liderancas'); }
+
+        // 2. Pacientes (STATUS_TITULO)
+        const snapPac = await window.getDocs(window.collection(window.db, 'pacientes'));
+        for(let doc of snapPac.docs) {
+            await addIfNew('STATUS_TITULO', doc.data().status_titulo);
+            // also try to get lideranca from paciente
+            if (doc.data().indicacao) await addIfNew('LIDERANCA', doc.data().indicacao);
+        }
+
+        // 3. Atendimentos (LOCAL e PARCEIRO)
+        const snapAtend = await window.getDocs(window.collection(window.db, 'atendimentos'));
+        for(let doc of snapAtend.docs) {
+            await addIfNew('LOCAL', doc.data().local);
+            await addIfNew('PARCEIRO', doc.data().parceiro);
+            if (doc.data().indicacao) await addIfNew('LIDERANCA', doc.data().indicacao);
+        }
+
+        if(typeof showMessage === 'function') showMessage('Extração concluída com sucesso! Recarregando...', 'success');
+        setTimeout(() => window.location.reload(), 2000);
+    } catch(e) {
+        console.error(e);
+        if(typeof showModalAlert === 'function') showModalAlert('Erro ao extrair: ' + e.message);
+    }
+};
+
+setTimeout(() => {
+    if (localStorage.getItem('extracao_run') !== 'true') {
+        if (typeof extrairDadosParaListas === 'function') {
+            extrairDadosParaListas().then(() => {
+                localStorage.setItem('extracao_run', 'true');
+            });
+        }
+    }
+}, 7000);
+
+// ==========================================
+// UPLOAD DE ARQUIVOS (FIREBASE STORAGE)
+// ==========================================
+
+async function uploadArquivoFirebase(file, prefixPath) {
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+        throw new Error(`O arquivo ${file.name} tem mais de 5MB. Envie arquivos menores.`);
+    }
+
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+    const fullPath = `${prefixPath}/${timestamp}_${safeName}`;
+    
+    const storageRef = window.storage.ref();
+    const fileRef = storageRef.child(fullPath);
+    
+    await fileRef.put(file);
+    const downloadURL = await fileRef.getDownloadURL();
+    
+    return {
+        name: file.name,
+        url: downloadURL,
+        path: fullPath,
+        size: file.size
+    };
+}
+
+async function uploadArquivosPaciente() {
+    const input = document.getElementById('file_upload_documentos');
+    if (!input.files || input.files.length === 0) return typeof showModalAlert === 'function' ? showModalAlert("Selecione pelo menos um arquivo antes de clicar em Enviar.") : alert("Selecione pelo menos um arquivo.");
+    
+    const progressEl = document.getElementById('upload_progress_paciente');
+    if(progressEl) { progressEl.classList.remove('hidden'); progressEl.classList.add('flex'); }
+    
+    const hiddenInput = document.getElementById('field_arquivos_json');
+    let atuais = [];
+    try { atuais = JSON.parse(hiddenInput.value || '[]'); } catch(e) {}
+    
+    try {
+        for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const result = await uploadArquivoFirebase(file, 'pacientes_docs');
+            atuais.push(result);
+        }
+        hiddenInput.value = JSON.stringify(atuais);
+        renderizarListaArquivos(atuais, 'lista_arquivos_paciente', 'field_arquivos_json');
+        input.value = ""; // limpa o input
+    } catch(e) {
+        typeof showModalAlert === 'function' ? showModalAlert(e.message) : alert(e.message);
+    } finally {
+        if(progressEl) { progressEl.classList.add('hidden'); progressEl.classList.remove('flex'); }
+    }
+}
+
+async function uploadArquivosAtendimento() {
+    const input = document.getElementById('file_upload_atendimento');
+    if (!input.files || input.files.length === 0) return typeof showModalAlert === 'function' ? showModalAlert("Selecione pelo menos um arquivo antes de clicar em Enviar.") : alert("Selecione pelo menos um arquivo.");
+    
+    const progressEl = document.getElementById('upload_progress_atendimento');
+    if(progressEl) { progressEl.classList.remove('hidden'); progressEl.classList.add('flex'); }
+    
+    const hiddenInput = document.getElementById('field_arquivos_json_atendimento');
+    let atuais = [];
+    try { atuais = JSON.parse(hiddenInput.value || '[]'); } catch(e) {}
+    
+    try {
+        for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const result = await uploadArquivoFirebase(file, 'atendimentos_docs');
+            atuais.push(result);
+        }
+        hiddenInput.value = JSON.stringify(atuais);
+        renderizarListaArquivos(atuais, 'lista_arquivos_atendimento', 'field_arquivos_json_atendimento');
+        input.value = ""; // limpa o input
+    } catch(e) {
+        typeof showModalAlert === 'function' ? showModalAlert(e.message) : alert(e.message);
+    } finally {
+        if(progressEl) { progressEl.classList.add('hidden'); progressEl.classList.remove('flex'); }
+    }
+}
+
+function renderizarListaArquivos(arquivos, containerId, hiddenInputId) {
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    
+    container.innerHTML = '';
+    arquivos.forEach((arq, index) => {
+        const chip = document.createElement('div');
+        chip.className = "flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-xs font-medium dark:bg-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800 shadow-sm";
+        
+        const link = document.createElement('a');
+        link.href = arq.url;
+        link.target = "_blank";
+        link.className = "hover:underline flex items-center gap-1 max-w-[200px] truncate";
+        link.innerHTML = `<i data-lucide="file" class="w-3 h-3 flex-shrink-0"></i> <span class="truncate" title="${arq.name}">${arq.name}</span>`;
+        
+        const btnRemover = document.createElement('button');
+        btnRemover.type = "button";
+        btnRemover.className = "text-red-500 hover:text-red-700 hover:bg-red-100 p-0.5 rounded transition ml-1 flex-shrink-0";
+        btnRemover.innerHTML = `<i data-lucide="x" class="w-3 h-3"></i>`;
+        btnRemover.onclick = () => { removerArquivo(index, hiddenInputId, containerId); };
+        
+        chip.appendChild(link);
+        chip.appendChild(btnRemover);
+        container.appendChild(chip);
+    });
+    
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function removerArquivo(index, hiddenInputId, containerId) {
+    if(!confirm("Remover este anexo da lista? (Ele será salvo assim no banco ao submeter o formulário)")) return;
+    
+    const hiddenInput = document.getElementById(hiddenInputId);
+    let atuais = [];
+    try { atuais = JSON.parse(hiddenInput.value || '[]'); } catch(e) {}
+    
+    atuais.splice(index, 1);
+    hiddenInput.value = JSON.stringify(atuais);
+    
+    renderizarListaArquivos(atuais, containerId, hiddenInputId);
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestao-central-v9';
+const CACHE_NAME = 'gestao-central-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -12,10 +12,6 @@ const ASSETS_TO_CACHE = [
   './js/charts.js',
   './js/aniversariantes.js',
   './js/exporter.js',
-  './js/agenda.js',
-  './js/campanhas.js',
-  './js/zap-v2.js',
-  './js/darkmode.js',
   './js/main.js'
 ];
 

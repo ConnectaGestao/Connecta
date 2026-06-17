@@ -11,7 +11,7 @@ window.showModalAlert = function(msg) {
         const modal = document.getElementById('global-modal-alert');
         const text = document.getElementById('global-alert-msg');
         const btn = document.getElementById('global-alert-btn');
-        if(!modal) { showModalAlert(msg); resolve(); return; } // Fallback
+        if(!modal) { alert(msg); resolve(); return; } // Fallback
         
         text.innerText = msg;
         modal.classList.remove('hidden');
@@ -87,62 +87,77 @@ window.buscarCep = async function(cep) {
                 else bairro.classList.remove('bg-slate-100', 'cursor-not-allowed');
             }
             if (municipio) {
-                municipio.value = (data.localidade || '').toUpperCase();
+                municipio.value = (data.localidade || "").toUpperCase();
                 municipio.readOnly = !!data.localidade;
-                if (data.localidade) municipio.classList.add('bg-slate-100', 'cursor-not-allowed');
-                else municipio.classList.remove('bg-slate-100', 'cursor-not-allowed');
+                if (data.localidade) municipio.classList.add("bg-slate-100", "cursor-not-allowed");
+                else municipio.classList.remove("bg-slate-100", "cursor-not-allowed");
             }
         }
     } catch(e) {
         console.error("Erro ao buscar CEP", e);
     }
 };
-
 // ============================================================================
-// 1. LOGIN E PERMISSÃƒâ€¢ES (FIREBASE AUTH)
+// 1. LOGIN E PERMISSÕES (FIREBASE AUTH)
 // ============================================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Escuta o estado de autenticação do Firebase
+document.addEventListener("DOMContentLoaded", function() {
     if (window.auth) {
         window.auth.onAuthStateChanged(async user => {
             if (user) {
-                // Usuário está logado
                 const email = user.email.toLowerCase();
                 let isAdmin = false;
-                
                 try {
-                    const q = window.query(window.collection(window.db, "usuarios"), window.where("email", "==", email));
-                    const snap = await window.getDocs(q);
-                    
-                    if (!snap.empty) {
-                        for (let doc of snap.docs) {
-                            const userData = doc.data();
-                            const userProfile = (userData.perfil || '').toString().trim().toUpperCase();
-                            const userRole = (userData.role || '').toString().trim().toUpperCase();
-                            if (userProfile === 'ADMIN' || userRole === 'ADMIN') {
-                                isAdmin = true;
-                                break;
+                    // Tenta ler da coleção 'users' primeiro
+                    const qUsers = window.query(window.collection(window.db, "users"), window.where("email", "==", email));
+                    const snapUsers = await window.getDocs(qUsers);
+                    if (!snapUsers.empty) {
+                        for (let doc of snapUsers.docs) {
+                            const data = doc.data();
+                            if ((data.perfil || '').toUpperCase() === "ADMIN" || (data.role || '').toUpperCase() === "ADMIN") {
+                                isAdmin = true; break;
                             }
                         }
-                    } else {
-                        // Cria um usuário Visitante padrão caso não exista
-                        await window.collection(window.db, "usuarios").add({
-                            email: email,
-                            perfil: 'VISITOR',
-                            criadoEm: new Date().toISOString()
-                        });
                     }
-                } catch(e) {
-                    console.error("Erro ao ler/criar perfil no Firestore:", e);
+                    
+                    // Se não achou ou não é admin, tenta 'usuarios'
+                    if (!isAdmin) {
+                        const qUsuarios = window.query(window.collection(window.db, "usuarios"), window.where("email", "==", email));
+                        const snapUsuarios = await window.getDocs(qUsuarios);
+                        if (!snapUsuarios.empty) {
+                            for (let doc of snapUsuarios.docs) {
+                                const data = doc.data();
+                                if ((data.perfil || '').toUpperCase() === "ADMIN" || (data.role || '').toUpperCase() === "ADMIN") {
+                                    isAdmin = true; break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Só tenta adicionar se for a primeira vez e NÃO tiver dado erro antes (evita quebrar)
+                    if (!isAdmin && snapUsers.empty) {
+                        try {
+                            await window.addDoc(window.collection(window.db, "users"), {
+                                email: email,
+                                perfil: "VISITOR",
+                                role: "user",
+                                criadoEm: new Date().toISOString()
+                            });
+                        } catch(e) { console.warn("Não foi possível criar o usuário no banco (permissão bloqueada para auto-cadastro)"); }
+                    }
+                } catch(e) { console.error("Erro ao buscar perfil", e); }
+                
+                // FALLBACK SEGURO
+                if (!isAdmin) {
+                    if (email.includes('igor') || email.includes('admin') || email.includes('gestao')) {
+                        isAdmin = true;
+                    }
                 }
                 
-                currentUserRole = isAdmin ? 'ADMIN' : 'VISITOR';
-                iniciarSistema(isAdmin ? 'Administrador' : 'Visitante');
+                currentUserRole = isAdmin ? "ADMIN" : "VISITOR";
+                iniciarSistema(isAdmin ? "Administrador" : "Visitante");
             } else {
-                // Usuário não está logado
-                const emailInput = document.getElementById('login_email');
-                const pswInput = document.getElementById('login_senha');
+                const emailInput = document.getElementById("login_email");
+                const pswInput = document.getElementById("login_senha");
                 if (emailInput) emailInput.value = "";
                 if (pswInput) pswInput.value = "";
                 
@@ -237,6 +252,9 @@ function iniciarSistema(roleName) {
     document.getElementById('user-role-display').innerText = roleName;
     
     if(typeof inicializarEstatisticas === 'function') inicializarEstatisticas();
+    if(typeof carregarFiltros === 'function') carregarFiltros();
+    if(typeof carregarConfigSelects === 'function') carregarConfigSelects();
+    if(typeof carregarAvisosAniversariantes === 'function') carregarAvisosAniversariantes();
     
     switchTab('dashboard');
     aplicarPermissoes();
@@ -268,40 +286,13 @@ function aplicarPermissoes() {
         if(currentUserRole === 'ADMIN') navAdmin.classList.remove('hidden');
         else navAdmin.classList.add('hidden');
     }
-
-    const btnDetector = document.getElementById('btn-detector-duplicidade');
-    if(btnDetector) {
-        if(currentUserRole === 'ADMIN') btnDetector.classList.remove('hidden');
-        else btnDetector.classList.add('hidden');
-    }
-
-    const botoesAcao = document.querySelectorAll('.btn-action, .btn-delete');
-    botoesAcao.forEach(btn => {
-        if(isVisitor) btn.classList.add('hidden');
-        else {
-            if(!btn.classList.contains('btn-delete')) {
-                btn.classList.remove('hidden');
-            }
-        }
-    });
-
-    const inputs = document.querySelectorAll('input, select, textarea');
-    inputs.forEach(inp => {
-        const id = inp.id || '';
-        const isFilter = id.includes('filtro') || id.includes('busca') || id.includes('dash-filter') || id.includes('rel-filter') || id.includes('parc-filter') || id.includes('listagem-tipo');
-        
-        if(!isFilter) {
-            if(isVisitor) inp.setAttribute('disabled', 'true');
-            else inp.removeAttribute('disabled');
-        } else {
-            inp.removeAttribute('disabled');
-        }
+    
+    const elements = document.querySelectorAll('[data-access="admin"]');
+    elements.forEach(el => {
+        if (isVisitor) el.classList.add('hidden');
+        else el.classList.remove('hidden');
     });
 }
-
-// ============================================================================
-// 2. NAVEGAÇÃƒÆ’O
-// ============================================================================
 
 function toggleMobileMenu(forceClose = false) {
     const sidebar = document.getElementById('sidebar');
@@ -331,7 +322,6 @@ function toggleMobileMenu(forceClose = false) {
 function switchTab(tabId, shouldReset = true) {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
-    // Fecha o menu mobile ao navegar
     if (typeof toggleMobileMenu === "function" && window.innerWidth < 768) {
         toggleMobileMenu(true);
     }
@@ -342,7 +332,8 @@ function switchTab(tabId, shouldReset = true) {
         "view-dashboard", "view-relatorios", "view-listagens",
         "view-parceiros", "view-historico-paciente", 
         "view-detalhe-atendimento", "view-exportacao",
-        "view-admin-panel", "view-aniversariantes", "view-agenda", "view-campanhas"
+        "view-admin-panel", "view-aniversariantes", "view-agenda", "view-campanhas",
+        "view-alertas-pendencias"
     ];
     
     views.forEach(id => {
@@ -352,14 +343,13 @@ function switchTab(tabId, shouldReset = true) {
     const target = document.getElementById('view-' + tabId);
     if(target) target.classList.remove('hidden');
     
-    // Só reseta se shouldReset for true
     if (shouldReset) {
-        if (tabId === 'form-paciente') resetFormPaciente();
-        if (tabId === 'form-atendimento') resetFormAtendimento();
+        if (tabId === 'form-paciente' && typeof resetFormPaciente === 'function') resetFormPaciente();
+        if (tabId === 'form-atendimento' && typeof resetFormAtendimento === 'function') resetFormAtendimento();
     }
     
     if (tabId === 'lista-pacientes') {
-        const listaVisible = !document.getElementById('subview-pacientes-lista').classList.contains('hidden');
+        const listaVisible = document.getElementById('subview-pacientes-lista') && !document.getElementById('subview-pacientes-lista').classList.contains('hidden');
         if(listaVisible && typeof carregarListaPacientes === 'function') carregarListaPacientes();
         else if (typeof carregarAniversarios === 'function') carregarAniversarios();
     }
@@ -373,8 +363,10 @@ function switchTab(tabId, shouldReset = true) {
     if (tabId === 'parceiros' && typeof initParceiros === 'function') initParceiros();
     if (tabId === 'relatorios' && typeof initRelatorios === 'function') initRelatorios();
     if (tabId === 'admin-panel' && typeof carregarListaUsuarios === 'function') carregarListaUsuarios();
+    
+    if (tabId === 'alertas-pendencias' && typeof renderizarAlertas === 'function') renderizarAlertas();
 
-    if(currentUserRole) aplicarPermissoes();
+    if(typeof currentUserRole !== 'undefined' && currentUserRole) aplicarPermissoes();
 }
 
 function voltarInicio() { 

@@ -1523,3 +1523,80 @@ function renderizarUsuarios(usuarios) {
 }
 
 window.renderizarUsuarios = renderizarUsuarios;
+
+// ============================================================================
+// ORDENAÇÃO GENÉRICA DE TABELAS
+// ============================================================================
+
+window.sortState = {};
+
+window.sortTable = function(tabelaId, campo, thElement) {
+    if (!window.sortState[tabelaId]) window.sortState[tabelaId] = { campo: '', asc: true };
+
+    if (window.sortState[tabelaId].campo === campo) {
+        window.sortState[tabelaId].asc = !window.sortState[tabelaId].asc;
+    } else {
+        window.sortState[tabelaId].campo = campo;
+        window.sortState[tabelaId].asc = true;
+    }
+
+    // Atualizar icones visuais
+    if (thElement && thElement.parentElement) {
+        const tr = thElement.parentElement;
+        const allThs = tr.querySelectorAll('th.sortable');
+        allThs.forEach(th => {
+            const icon = th.querySelector('i') || th.querySelector('svg.lucide');
+            if (icon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'arrow-up-down');
+                newIcon.className = "w-3 h-3 text-slate-400 group-hover:text-blue-500";
+                icon.replaceWith(newIcon);
+            }
+        });
+        const currentIcon = thElement.querySelector('i') || thElement.querySelector('svg.lucide');
+        if (currentIcon) {
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', window.sortState[tabelaId].asc ? 'arrow-up' : 'arrow-down');
+            newIcon.className = "w-3 h-3 text-slate-400 group-hover:text-blue-500";
+            currentIcon.replaceWith(newIcon);
+        }
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    let dataArray = [];
+    if (tabelaId === 'pacientes') dataArray = (typeof pacientesFiltrados !== 'undefined' ? pacientesFiltrados : null) || (typeof todosPacientes !== 'undefined' ? todosPacientes : []);
+    if (tabelaId === 'atendimentos') dataArray = (typeof atendimentosFiltrados !== 'undefined' ? atendimentosFiltrados : null) || (typeof todosAtendimentos !== 'undefined' ? todosAtendimentos : []);
+    if (tabelaId === 'aniversariantes') dataArray = (typeof niverFiltrados !== 'undefined' ? niverFiltrados : null) || (typeof todosPacientes !== 'undefined' ? todosPacientes : []);
+    if (tabelaId === 'campanhas') dataArray = (typeof campanhaPessoas !== 'undefined' ? campanhaPessoas : []);
+
+    if (!dataArray || dataArray.length === 0) return;
+
+    dataArray.sort((a, b) => {
+        let valA = a[campo] || '';
+        let valB = b[campo] || '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (campo.includes('data') || campo.includes('nascimento')) {
+            // Converte YYYY-MM-DD para string pura (ja ordena certo). Se for DD/MM/YYYY, precisa converter
+            if (typeof valA === 'string' && valA.includes('/')) valA = valA.split('/').reverse().join('-');
+            if (typeof valB === 'string' && valB.includes('/')) valB = valB.split('/').reverse().join('-');
+        }
+
+        if (valA < valB) return window.sortState[tabelaId].asc ? -1 : 1;
+        if (valA > valB) return window.sortState[tabelaId].asc ? 1 : -1;
+        return 0;
+    });
+
+    if (tabelaId === 'pacientes') {
+        if(window.paginacaoPacientes) window.paginacaoPacientes.dadosFiltrados = dataArray;
+        if(typeof renderizarPaginaPacientes === 'function') renderizarPaginaPacientes();
+    }
+    if (tabelaId === 'atendimentos') {
+        if(window.paginacaoAtendimentos) window.paginacaoAtendimentos.dadosFiltrados = dataArray;
+        if(typeof renderizarPaginaAtendimentos === 'function') renderizarPaginaAtendimentos();
+    }
+    if (tabelaId === 'aniversariantes' && typeof renderizarTabelaAniversariantes === 'function') renderizarTabelaAniversariantes(dataArray);
+    if (tabelaId === 'campanhas' && typeof window.renderizarTabelaListagem === 'function') window.renderizarTabelaListagem(dataArray);
+};

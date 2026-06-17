@@ -39,7 +39,8 @@ const CONFIG_SELECTS = [
     { id: 'local', label: 'Local de Atendimento', container: 'container_local', key: 'LOCAL' },
     { id: 'tipos_exame', label: 'Tipos (Específico HO)', container: 'container_tipos_exame', key: 'TIPOS_EXAME' },
     { id: 'parceiro', label: 'Parceiro/Médico', container: 'container_parceiro', key: 'PARCEIRO' },
-    { id: 'status_atendimento', label: 'Status Inicial', container: 'container_status_atendimento', key: 'STATUS_ATENDIMENTO', nameOverride: 'status' }
+    { id: 'status_atendimento', label: 'Status Inicial', container: 'container_status_atendimento', key: 'STATUS_ATENDIMENTO', nameOverride: 'status' },
+    { id: 'prioridade', label: 'Prioridade / Vulnerabilidade', container: 'container_prioridade', key: 'PRIORIDADE' }
 ];
 
 // ============================================================================

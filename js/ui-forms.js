@@ -24,21 +24,20 @@ function toggleModoEdicao(isEdicao) {
 }
 
 function adicionarProcedimentoNaLista() {
-    const dataAbertura = document.getElementById('data_abertura').value;
-    const prontuario = document.getElementById('field_prontuario').value;
-    const tipoServico = document.getElementById('field_tipo_servico').value;
-    const parceiro = document.getElementById('field_parceiro').value;
-    const especialidade = document.getElementById('field_especialidade').value;
-    const procedimento = document.getElementById('field_procedimento').value;
-    const local = document.getElementById('field_local').value;
-    const tipoDetalhe = document.getElementById('field_tipo').value;
-    const valor = document.getElementById('field_valor').value;
-    const dataMarcacao = document.getElementById('field_data_marcacao').value;
-    const dataRisco = document.getElementById('field_data_risco').value;
-    const dataConclusao = document.getElementById('field_data_conclusao').value;
-    const status = document.getElementById('field_status_atendimento').value; 
-    const obs = document.getElementById('field_obs_atendimento').value;
-    const prioridade = document.getElementById('field_prioridade') ? document.getElementById('field_prioridade').value : '';
+    const dataAbertura = document.getElementById('data_abertura')?.value || '';
+    const prontuario = document.getElementById('field_prontuario')?.value || '';
+    const tipoServico = document.getElementById('field_tipo_servico')?.value || '';
+    const parceiro = document.getElementById('field_parceiro')?.value || '';
+    const especialidade = document.getElementById('field_especialidade')?.value || '';
+    const procedimento = document.getElementById('field_procedimento')?.value || '';
+    const local = document.getElementById('field_local')?.value || '';
+    const tipoDetalhe = document.getElementById('field_tipo')?.value || '';
+    const valor = document.getElementById('field_valor')?.value || '';
+    const dataMarcacao = document.getElementById('field_data_marcacao')?.value || '';
+    const dataRisco = document.getElementById('field_data_risco')?.value || '';
+    const status = document.getElementById('field_status_atendimento')?.value || ''; 
+    const obs = document.getElementById('field_obs_atendimento')?.value || '';
+    const prioridade = document.getElementById('field_prioridade')?.value || '';
 
     if (!tipoServico && !procedimento && !especialidade) {
         showModalAlert("Preencha pelo menos o Tipo de Serviço, Especialidade ou Procedimento.");
@@ -58,11 +57,14 @@ function adicionarProcedimentoNaLista() {
         valor: valor,
         data_marcacao: dataMarcacao,
         data_risco: dataRisco,
-        data_conclusao: dataConclusao,
-        status: status || (dataConclusao ? 'CONCLUIDO' : 'PENDENTE'),
+        status: status || 'RECEBIDO',
         obs_atendimento: obs,
         prioridade: prioridade,
-        anexos_link: document.getElementById('field_anexos_link') ? document.getElementById('field_anexos_link').value : ''
+        anexos_link: document.getElementById('field_anexos_link') ? document.getElementById('field_anexos_link').value : '',
+        arquivos_anexos: (() => {
+            try { return JSON.parse(document.getElementById('field_arquivos_json_atendimento')?.value || '[]'); }
+            catch(e) { return []; }
+        })()
     };
 
     listaProcedimentosTemp.push(item);
@@ -70,16 +72,20 @@ function adicionarProcedimentoNaLista() {
     
     // Limpa campos do card
     ['field_especialidade', 'field_procedimento', 'field_local', 'field_tipo', 
-     'field_valor', 'field_data_marcacao', 'field_data_risco', 'field_data_conclusao', 
-     'field_obs_atendimento', 'field_anexos_link'].forEach(id => {
+     'field_valor', 'field_data_marcacao', 'field_data_risco', 
+     'field_obs_atendimento', 'field_anexos_link', 'field_arquivos_json_atendimento', 'file_upload_atendimento'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.value = '';
+        if(el) {
+            if(el.type === 'hidden' && id.includes('json')) el.value = '[]';
+            else el.value = '';
+        }
     });
+    
+    if(typeof renderizarListaArquivos === 'function') renderizarListaArquivos([], 'lista_arquivos_atendimento', 'field_arquivos_json_atendimento');
     
     ['especialidade', 'procedimento', 'local', 'tipo'].forEach(k => {
         const sel = document.getElementById(`sel_${k}`);
         if(sel) sel.value = "";
-        cancelSelectNew(k);
     });
 }
 
@@ -120,22 +126,6 @@ function removerItemTemp(index) {
     renderizarTabelaProcedimentos();
 }
 
-function checkStatusConclusao() {
-    const dataConc = document.getElementById('field_data_conclusao').value;
-    const selStatus = document.getElementById('sel_status_atendimento');
-    const fieldStatus = document.getElementById('field_status_atendimento');
-    
-    if (dataConc) {
-        if(selStatus) selStatus.value = 'CONCLUIDO';
-        if(fieldStatus) fieldStatus.value = 'CONCLUIDO';
-    } else {
-        if(selStatus && selStatus.value === 'CONCLUIDO') {
-            selStatus.value = 'PENDENTE';
-            if(fieldStatus) fieldStatus.value = 'PENDENTE';
-        }
-    }
-}
-
 async function submitAtendimento(e) {
     if(e) e.preventDefault(); 
     const id = document.getElementById('atend_id_hidden').value;
@@ -144,23 +134,22 @@ async function submitAtendimento(e) {
     if (id) {
         const data = {
             id: id,
-            cpf_paciente: document.getElementById('hidden_cpf').value,
-            nome_paciente: document.getElementById('hidden_nome').value,
-            data_abertura: document.getElementById('data_abertura').value,
-            prontuario: document.getElementById('field_prontuario').value,
-            tipo_servico: document.getElementById('field_tipo_servico').value,
-            parceiro: document.getElementById('field_parceiro').value,
-            especialidade: document.getElementById('field_especialidade').value,
-            procedimento: document.getElementById('field_procedimento').value,
-            local: document.getElementById('field_local').value,
-            tipo: document.getElementById('field_tipo').value,
-            valor: document.getElementById('field_valor').value,
-            data_marcacao: document.getElementById('field_data_marcacao').value,
-            data_risco: document.getElementById('field_data_risco').value,
-            data_conclusao: document.getElementById('field_data_conclusao').value,
-            status: document.getElementById('field_status_atendimento').value,
-            obs_atendimento: document.getElementById('field_obs_atendimento').value,
-            anexos_link: document.getElementById('field_anexos_link') ? document.getElementById('field_anexos_link').value : ''
+            cpf_paciente: document.getElementById('hidden_cpf')?.value || '',
+            nome_paciente: document.getElementById('hidden_nome')?.value || '',
+            data_abertura: document.getElementById('data_abertura')?.value || '',
+            prontuario: document.getElementById('field_prontuario')?.value || '',
+            tipo_servico: document.getElementById('field_tipo_servico')?.value || '',
+            parceiro: document.getElementById('field_parceiro')?.value || '',
+            especialidade: document.getElementById('field_especialidade')?.value || '',
+            procedimento: document.getElementById('field_procedimento')?.value || '',
+            local: document.getElementById('field_local')?.value || '',
+            tipo: document.getElementById('field_tipo')?.value || '',
+            valor: document.getElementById('field_valor')?.value || '',
+            data_marcacao: document.getElementById('field_data_marcacao')?.value || '',
+            data_risco: document.getElementById('field_data_risco')?.value || '',
+            status: document.getElementById('field_status_atendimento')?.value || '',
+            obs_atendimento: document.getElementById('field_obs_atendimento')?.value || '',
+            anexos_link: document.getElementById('field_anexos_link')?.value || ''
         };
 
         if(await sendData('registerService', data, 'loading-atendimento')) { 
@@ -228,12 +217,6 @@ function renderizarSelectsVazios() {
                     <select id="sel_${cfg.id}" onchange="checkSelectNew('${cfg.id}')" class="input-field bg-white uppercase">
                         <option value="">Carregando...</option>
                     </select>
-                    <div id="grp_new_${cfg.id}" class="hidden mt-1 animate-fade-in">
-                        <div class="flex gap-1">
-                            <input type="text" id="inp_${cfg.id}" placeholder="Digite novo..." class="switched-input flex-1 input-field uppercase">
-                            <button type="button" onclick="cancelSelectNew('${cfg.id}')" class="bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200 font-bold" title="Cancelar">X</button>
-                        </div>
-                    </div>
                     <input type="hidden" name="${fieldName}" id="field_${cfg.id}">
                 </div>`;
         }
@@ -242,29 +225,30 @@ function renderizarSelectsVazios() {
 
 function checkSelectNew(id) {
     const sel = document.getElementById(`sel_${id}`);
-    if (sel.value === '__NEW__') {
-        sel.classList.add('hidden');
-        document.getElementById(`grp_new_${id}`).classList.remove('hidden');
-        document.getElementById(`inp_${id}`).focus();
-        document.getElementById(`field_${id}`).value = '';
-    } else {
+    if (sel) {
         document.getElementById(`field_${id}`).value = sel.value;
         if (id === 'procedimento' && typeof aplicarValorPadraoProc === 'function') {
             aplicarValorPadraoProc(sel.value);
         }
+        
+        // Verifica se devemos mostrar os campos de Data Marcação e Risco
+        const tipoServico = document.getElementById('field_tipo_servico') ? document.getElementById('field_tipo_servico').value.toUpperCase() : '';
+        const procedimento = document.getElementById('field_procedimento') ? document.getElementById('field_procedimento').value.toUpperCase() : '';
+        const tipo = document.getElementById('field_tipo') ? document.getElementById('field_tipo').value.toUpperCase() : '';
+        const especialidade = document.getElementById('field_especialidade') ? document.getElementById('field_especialidade').value.toUpperCase() : '';
+        const prioridade = document.getElementById('field_prioridade') ? document.getElementById('field_prioridade').value.toUpperCase() : '';
+        
+        const isCirurgia = (tipoServico.includes('CIRURG')) || (procedimento.includes('CIRURG')) || (tipo.includes('CIRURG')) || (especialidade.includes('CIRURG')) || (prioridade.includes('CIRURG'));
+        
+        const wrapMarcacao = document.getElementById('container_data_marcacao');
+        const wrapRisco = document.getElementById('container_data_risco');
+        if(wrapMarcacao) {
+            if(isCirurgia) wrapMarcacao.classList.remove('hidden'); else { wrapMarcacao.classList.add('hidden'); document.getElementById('field_data_marcacao').value = ''; }
+        }
+        if(wrapRisco) {
+            if(isCirurgia) wrapRisco.classList.remove('hidden'); else { wrapRisco.classList.add('hidden'); document.getElementById('field_data_risco').value = ''; }
+        }
     }
-}
-
-function cancelSelectNew(id) {
-    const sel = document.getElementById(`sel_${id}`);
-    if (sel) {
-        sel.value = ""; 
-        sel.classList.remove('hidden'); 
-    }
-    const field = document.getElementById(`field_${id}`);
-    if (field) field.value = "";
-    const grp = document.getElementById(`grp_new_${id}`);
-    if (grp) grp.classList.add('hidden');
 }
 
 function preencherSelectInteligente(id, valor) {
@@ -396,21 +380,66 @@ function renderizarTorreGenero(pacientes) {
     }, 100);
 }
 
+window.tipoCadastroAtual = 'COMPLETO'; // 'COMPLETO' ou 'PRE'
+
+function abrirModalTipoCadastro() {
+    const modal = document.getElementById('modal-tipo-cadastro');
+    if(modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+}
+
+function fecharModalTipoCadastro() {
+    const modal = document.getElementById('modal-tipo-cadastro');
+    if(modal) {
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+}
+
+function iniciarCadastroCompleto() {
+    fecharModalTipoCadastro();
+    window.tipoCadastroAtual = 'COMPLETO';
+    switchTab('form-paciente');
+}
+
+function iniciarPreCadastro() {
+    fecharModalTipoCadastro();
+    window.tipoCadastroAtual = 'PRE';
+    switchTab('form-paciente');
+}
+
 function resetFormPaciente() {
     document.getElementById('frmPaciente').reset();
     document.getElementById('paciente_id_hidden').value = "";
     document.getElementById('msg_cpf_paciente').innerText = '';
     document.getElementById('opcoes-paciente-existente').classList.add('hidden');
-    document.getElementById('resto-form-paciente').classList.add('hidden');
     document.getElementById('btn-imprimir').classList.add('hidden');
+    
+    const divCpfInicial = document.getElementById('paciente_cpf_check').closest('.mb-8');
+    
+    if (window.tipoCadastroAtual === 'PRE') {
+        if(divCpfInicial) divCpfInicial.classList.add('hidden');
+        document.getElementById('resto-form-paciente').classList.remove('hidden');
+    } else {
+        if(divCpfInicial) divCpfInicial.classList.remove('hidden');
+        document.getElementById('resto-form-paciente').classList.add('hidden');
+    }
     
     const btnDelete = document.getElementById('btn-delete-paciente');
     if(btnDelete) btnDelete.classList.add('hidden');
     
+    document.getElementById('field_arquivos_json').value = '[]';
+    if(typeof renderizarListaArquivos === 'function') renderizarListaArquivos([], 'lista_arquivos_paciente', 'field_arquivos_json');
+    
     CONFIG_SELECTS.forEach(cfg => {
         const sel = document.getElementById(`sel_${cfg.id}`);
         if(sel && cfg.id !== 'status_atendimento') sel.value = "";
-        cancelSelectNew(cfg.id);
     });
 }
 
@@ -455,7 +484,6 @@ function resetFormAtendimento(preserveSearch = false) {
             CONFIG_SELECTS.forEach(cfg => {
                 const sel = document.getElementById(`sel_${cfg.id}`);
                 if(sel) sel.value = "";
-                if(typeof cancelSelectNew === 'function') cancelSelectNew(cfg.id);
             });
         }
     }
@@ -472,6 +500,11 @@ function resetFormAtendimento(preserveSearch = false) {
     const btnDelete = document.getElementById('btn-delete-atendimento');
     if(btnDelete) btnDelete.classList.add('hidden');
     
+    const wrapMarcacao = document.getElementById('container_data_marcacao');
+    const wrapRisco = document.getElementById('container_data_risco');
+    if(wrapMarcacao) wrapMarcacao.classList.add('hidden');
+    if(wrapRisco) wrapRisco.classList.add('hidden');
+    
     const dataAb = document.getElementById('data_abertura');
     if(dataAb) dataAb.valueAsDate = new Date();
     
@@ -486,11 +519,6 @@ function resetFormAtendimento(preserveSearch = false) {
         prontuarioInput.classList.add('bg-slate-100', 'cursor-not-allowed');
         prontuarioInput.classList.remove('bg-white');
         prontuarioInput.placeholder = "Selecione Local HO...";
-    }
-
-    const inpConclusao = document.getElementById('field_data_conclusao');
-    if(inpConclusao) {
-        inpConclusao.onchange = checkStatusConclusao;
     }
 }
 
@@ -520,13 +548,16 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
             'nome','apelido','familia','rg','nascimento','sexo','tel1','tel2',
             'cep','logradouro','municipio_titulo','zona','secao','obs',
             'sus', 'referencia', 'lideranca', 'nome_social', 'conjuge',
-            'profissao', 'cargo_eclesiastico', 'parentes', 'titulo', 'documentos_link'
+            'parentes', 'titulo', 'documentos_link'
         ];
         
         fields.forEach(k => { const el = document.getElementById(`field_${k}`); if(el) el.value = dados[k] || ''; });
         
         const elPront = document.getElementById('field_prontuario_paciente');
         if(elPront) elPront.value = dados['prontuario'] || '';
+        
+        const elCpfForm = document.getElementById('field_cpf_form');
+        if(elCpfForm) elCpfForm.value = dados['cpf'] || '';
         
         // Mostrar idade automaticamente ao editar
         if(typeof calcularIdadeFormulario === 'function') calcularIdadeFormulario();
@@ -537,7 +568,7 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
         const elBairro = document.getElementById('field_bairro');
         if (elBairro) elBairro.value = dados.bairro || dados.Bairro || '';
         
-        ['status_titulo', 'indicacao'].forEach(k => { 
+        ['status_titulo', 'indicacao', 'profissao', 'cargo_eclesiastico', 'segmento'].forEach(k => { 
             let val = dados[k];
             if (k === 'status_titulo') val = val || dados.situacao_eleitoral || dados.situacaoEleitoral || dados.municipio_titulo;
             if (k === 'indicacao') val = val || dados.quem_indicou || dados.QuemIndicou;
@@ -547,6 +578,13 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
         const elDocumentos = document.getElementById('field_documentos_link'); if(elDocumentos) elDocumentos.value = dados.documentos_link || '';
         const elTitulo = document.getElementById('field_titulo'); if(elTitulo) elTitulo.value = dados.titulo || '';
         const elLogra = document.getElementById('field_logradouro'); if(elLogra) elLogra.value = dados.logradouro || dados.endereco || dados.Endereco || dados.Logradouro || ''; 
+        
+        const elArquivosJson = document.getElementById('field_arquivos_json');
+        if (elArquivosJson) {
+            const arr = dados.arquivos_anexos || [];
+            elArquivosJson.value = JSON.stringify(arr);
+            if(typeof renderizarListaArquivos === 'function') renderizarListaArquivos(arr, 'lista_arquivos_paciente', 'field_arquivos_json');
+        }
     }
 }
 
@@ -594,22 +632,25 @@ function abrirEdicaoAtendimento(at) {
     const prontuarioInput = document.getElementById('field_prontuario');
     const localVal = at.local ? at.local.toUpperCase() : '';
     
-    if(localVal === 'HO') {
-        prontuarioInput.disabled = false;
-        prontuarioInput.classList.remove('bg-slate-100', 'cursor-not-allowed');
-        prontuarioInput.classList.add('bg-white');
-        prontuarioInput.value = at.prontuario || '';
-    } else {
-        prontuarioInput.disabled = true;
-        prontuarioInput.classList.add('bg-slate-100', 'cursor-not-allowed');
-        prontuarioInput.value = '';
+    if (prontuarioInput) {
+        if(localVal === 'HO') {
+            prontuarioInput.disabled = false;
+            prontuarioInput.classList.remove('bg-slate-100', 'cursor-not-allowed');
+            prontuarioInput.classList.add('bg-white');
+            prontuarioInput.value = at.prontuario || '';
+        } else {
+            prontuarioInput.disabled = true;
+            prontuarioInput.classList.add('bg-slate-100', 'cursor-not-allowed');
+            prontuarioInput.value = '';
+        }
     }
 
     document.getElementById('field_tipo').value = at.tipo || ''; 
     document.getElementById('field_data_marcacao').value = at.data_marcacao || '';
     document.getElementById('field_data_risco').value = at.data_risco || '';
-    document.getElementById('field_data_conclusao').value = at.data_conclusao || '';
-    document.getElementById('field_valor').value = at.valor || '';
+    let valFinal = at.valor || 'valor não definido na base';
+    if (valFinal == 0 || valFinal === '0' || valFinal === '0.00') valFinal = 'valor não definido na base';
+    document.getElementById('field_valor').value = valFinal;
     document.getElementById('field_obs_atendimento').value = at.obs_atendimento || '';
     if (document.getElementById('field_anexos_link')) document.getElementById('field_anexos_link').value = at.anexos_link || '';
 
@@ -618,8 +659,20 @@ function abrirEdicaoAtendimento(at) {
         if (typeof preencherSelectInteligente === 'function') preencherSelectInteligente(k, val);
     });
     
-    const inpConclusao = document.getElementById('field_data_conclusao');
-    if(inpConclusao) inpConclusao.onchange = checkStatusConclusao;
+    // Toggle containers conditionally
+    const isCirurgia = (at.tipo_servico || '').toUpperCase().includes('CIRURG') || 
+                       (at.procedimento || '').toUpperCase().includes('CIRURG') ||
+                       (at.tipo || '').toUpperCase().includes('CIRURG') ||
+                       (at.especialidade || '').toUpperCase().includes('CIRURG') ||
+                       (at.prioridade || '').toUpperCase().includes('CIRURG');
+    const wrapMarcacao = document.getElementById('container_data_marcacao');
+    const wrapRisco = document.getElementById('container_data_risco');
+    if(wrapMarcacao) {
+        if(isCirurgia) wrapMarcacao.classList.remove('hidden'); else { wrapMarcacao.classList.add('hidden'); document.getElementById('field_data_marcacao').value = ''; }
+    }
+    if(wrapRisco) {
+        if(isCirurgia) wrapRisco.classList.remove('hidden'); else { wrapRisco.classList.add('hidden'); document.getElementById('field_data_risco').value = ''; }
+    }
     
     if(typeof lucide !== 'undefined') lucide.createIcons();
     if(currentUserRole === 'VISITOR') aplicarPermissoes();

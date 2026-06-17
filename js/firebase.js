@@ -15,6 +15,7 @@ db.enablePersistence({ synchronizeTabs: true })
 // Coloca globais para api.js
 window.db = db;
 window.auth = firebase.auth();
+window.storage = firebase.storage();
 window.collection = (db, name) => db.collection(name);
 window.getDocs = async (ref) => await ref.get();
 window.getDoc = async (ref) => await ref.get();

@@ -27,6 +27,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <!-- SHEETJS para ler XLSX -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
@@ -123,11 +124,18 @@
             <button onclick="switchTab('campanhas')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="message-square" class="w-4 h-4 group-hover:text-emerald-400"></i> Campanhas (Whats)
             </button>
-<button onclick="switchTab('lista-atendimentos')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
+            <button onclick="switchTab('lista-atendimentos')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="list" class="w-5 h-5 group-hover:text-blue-400"></i> Atendimentos
             </button>
+            <button onclick="switchTab('alertas-pendencias')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group relative">
+                <i data-lucide="bell-ring" class="w-5 h-5 group-hover:text-red-400"></i> Alertas
+                <span id="badge-alertas" class="hidden absolute top-2 right-2 flex w-2 h-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+            </button>
             <button onclick="switchTab('relatorios')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
-                <i data-lucide="alert-triangle" class="w-5 h-5 group-hover:text-red-400"></i> Relatórios
+                <i data-lucide="pie-chart" class="w-5 h-5 group-hover:text-amber-400"></i> Relatórios
             </button>
             <button onclick="switchTab('listagens')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group">
                 <i data-lucide="printer" class="w-5 h-5 group-hover:text-indigo-400"></i> Listagens
@@ -141,16 +149,10 @@
             <button id="nav-admin" onclick="switchTab('admin-panel')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group hidden">
                 <i data-lucide="shield" class="w-5 h-5 group-hover:text-yellow-400"></i> Admin
             </button>
-            <button onclick="toggleDarkMode()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-2 text-sm text-slate-300 hover:text-white group mt-4">
-                <i data-lucide="moon" class="w-5 h-5 group-hover:text-indigo-400 dark:hidden"></i>
-                <i data-lucide="sun" class="w-5 h-5 group-hover:text-orange-400 hidden dark:block"></i>
-                <span class="dark:hidden">Modo Escuro</span>
-                <span class="hidden dark:inline">Modo Claro</span>
-            </button>
         </nav>
 
         <div id="sidebar-actions" class="p-4 border-t border-slate-800">
-            <button onclick="switchTab('form-paciente')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow-lg mb-2 flex items-center justify-center gap-2">
+            <button onclick="abrirModalTipoCadastro()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow-lg mb-2 flex items-center justify-center gap-2">
                 <i data-lucide="plus"></i> Novo Munícipe
             </button>
             <button onclick="switchTab('form-atendimento')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold shadow-lg mb-2 flex items-center justify-center gap-2">
@@ -166,7 +168,6 @@
             <div class="font-bold flex items-center gap-2 text-blue-400"><i data-lucide="database"></i> Connecta</div>
         </div>
         <div class="flex gap-3 items-center">
-            <button onclick="toggleDarkMode()" class="text-slate-300 p-1"><i data-lucide="moon" class="dark-mode-icon w-5 h-5"></i></button>
             <button onclick="logout()" class="text-xs text-red-400 border border-red-900 px-2 py-1 rounded">Sair</button>
             <button onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('flex');" class="text-white"><i data-lucide="menu"></i></button>
         </div>
@@ -357,7 +358,23 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                             <thead class="bg-pink-50 text-pink-900 uppercase font-bold text-xs border-b border-pink-100">
-                                <tr><th class="px-6 py-4">Data Nasc.</th><th class="px-6 py-4">Nome</th><th class="px-6 py-4">Telefone</th><th class="px-6 py-4">Bairro</th><th class="px-6 py-4">Status</th></tr>
+                                <tr>
+                                    <th class="px-6 py-4 cursor-pointer hover:bg-pink-100 sortable group select-none transition-colors" onclick="sortTable('aniversariantes', 'nascimento', this)">
+                                        <div class="flex items-center gap-1">Data Nasc. <i data-lucide="arrow-up-down" class="w-3 h-3 text-pink-300 group-hover:text-pink-600"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 cursor-pointer hover:bg-pink-100 sortable group select-none transition-colors" onclick="sortTable('aniversariantes', 'nome', this)">
+                                        <div class="flex items-center gap-1">Nome <i data-lucide="arrow-up" class="w-3 h-3 text-pink-300 group-hover:text-pink-600"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 cursor-pointer hover:bg-pink-100 sortable group select-none transition-colors" onclick="sortTable('aniversariantes', 'tel1', this)">
+                                        <div class="flex items-center gap-1">Telefone <i data-lucide="arrow-up-down" class="w-3 h-3 text-pink-300 group-hover:text-pink-600"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 cursor-pointer hover:bg-pink-100 sortable group select-none transition-colors" onclick="sortTable('aniversariantes', 'bairro', this)">
+                                        <div class="flex items-center gap-1">Bairro <i data-lucide="arrow-up-down" class="w-3 h-3 text-pink-300 group-hover:text-pink-600"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 cursor-pointer hover:bg-pink-100 sortable group select-none transition-colors" onclick="sortTable('aniversariantes', 'status_titulo', this)">
+                                        <div class="flex items-center gap-1">Status <i data-lucide="arrow-up-down" class="w-3 h-3 text-pink-300 group-hover:text-pink-600"></i></div>
+                                    </th>
+                                </tr>
                             </thead>
                             <tbody id="tabela-niver-body"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Aguardando dados...</td></tr></tbody>
                         </table>
@@ -392,12 +409,35 @@
 
             </div>
 
+            <div class="flex gap-4 border-b border-slate-200 dark:border-slate-700 mb-6 px-2">
+                <button id="tab-pacientes-completos" onclick="mudarTabPacientes('COMPLETOS')" class="py-2 border-b-2 font-bold transition border-blue-600 text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                    <i data-lucide="fingerprint" class="w-4 h-4"></i> Cadastros Completos
+                </button>
+                <button id="tab-pacientes-pre" onclick="mudarTabPacientes('PRE')" class="py-2 border-b-2 border-transparent text-slate-500 font-bold transition hover:text-slate-800 dark:hover:text-slate-300 flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4"></i> Pré Cadastros
+                </button>
+            </div>
+
             <div id="subview-pacientes-lista">
                 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                             <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-xs border-b border-slate-200 dark:border-slate-700">
-                                <tr><th class="px-6 py-4">Nome</th><th class="px-6 py-4">CPF</th><th class="px-6 py-4 hidden sm:table-cell">Telefone</th><th class="px-6 py-4 hidden md:table-cell">Município</th><th class="px-6 py-4 text-right">Ações</th></tr>
+                                <tr>
+                                    <th class="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('pacientes', 'nome', this)">
+                                        <div class="flex items-center gap-1">Nome <i data-lucide="arrow-up" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('pacientes', 'cpf', this)">
+                                        <div class="flex items-center gap-1">CPF <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 hidden sm:table-cell cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('pacientes', 'tel1', this)">
+                                        <div class="flex items-center gap-1">Telefone <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 hidden md:table-cell cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('pacientes', 'municipio', this)">
+                                        <div class="flex items-center gap-1">Município <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                    </th>
+                                    <th class="px-6 py-4 text-right">Ações</th>
+                                </tr>
                             </thead>
                             <tbody id="tabela-pacientes-body" class="divide-y divide-slate-100 dark:divide-slate-800"><tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Carregando...</td></tr></tbody>
                         </table>
@@ -450,12 +490,24 @@
                         <!-- HEADER DA TABELA ATUALIZADO (NOVAS COLUNAS) -->
                         <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-xs border-b border-slate-200 dark:border-slate-700">
                             <tr>
-                                <th class="px-4 py-4">Data</th>
-                                <th class="px-4 py-4">Munícipe</th>
-                                <th class="px-4 py-4">Serviço</th>
-                                <th class="px-4 py-4">Especialidade</th>
-                                <th class="px-4 py-4">Procedimento</th>
-                                <th class="px-4 py-4">Status</th>
+                                <th class="px-4 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('atendimentos', 'data_abertura', this)">
+                                    <div class="flex items-center gap-1">Data <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                </th>
+                                <th class="px-4 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('atendimentos', 'nome_paciente', this)">
+                                    <div class="flex items-center gap-1">Munícipe <i data-lucide="arrow-up" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                </th>
+                                <th class="px-4 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('atendimentos', 'tipo_servico', this)">
+                                    <div class="flex items-center gap-1">Serviço <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                </th>
+                                <th class="px-4 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('atendimentos', 'especialidade', this)">
+                                    <div class="flex items-center gap-1">Especialidade <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                </th>
+                                <th class="px-4 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('atendimentos', 'procedimento', this)">
+                                    <div class="flex items-center gap-1">Procedimento <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                </th>
+                                <th class="px-4 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 sortable group select-none transition-colors" onclick="sortTable('atendimentos', 'status', this)">
+                                    <div class="flex items-center gap-1">Status <i data-lucide="arrow-up-down" class="w-3 h-3 text-slate-400 group-hover:text-blue-500"></i></div>
+                                </th>
                                 <th class="px-4 py-4 text-right">Ação</th>
                             </tr>
                         </thead>
@@ -523,6 +575,71 @@
                             <i data-lucide="edit-3" class="w-4 h-4"></i> Editar Atendimento
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW ALERTAS -->
+        <div id="view-alertas-pendencias" class="hidden fade-in h-full flex flex-col">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6 shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <i data-lucide="bell-ring" class="w-7 h-7 text-red-500"></i> Alertas e Pendências
+                    </h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Acompanhamento ativo de atendimentos antigos não resolvidos</p>
+                </div>
+            </div>
+
+            <!-- Resumo Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 shrink-0">
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border-l-4 border-amber-400 shadow-sm flex items-center gap-4">
+                    <div class="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-full text-amber-600"><i data-lucide="clock" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Atenção (Mais de 90 dias)</p>
+                        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1" id="kpi-90d">-</h3>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border-l-4 border-orange-500 shadow-sm flex items-center gap-4">
+                    <div class="bg-orange-50 dark:bg-orange-900/30 p-3 rounded-full text-orange-600"><i data-lucide="alert-circle" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Crítico (Mais de 180 dias)</p>
+                        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1" id="kpi-180d">-</h3>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border-l-4 border-red-600 shadow-sm flex items-center gap-4">
+                    <div class="bg-red-50 dark:bg-red-900/30 p-3 rounded-full text-red-600"><i data-lucide="alert-triangle" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Urgente (Mais de 1 Ano)</p>
+                        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1" id="kpi-365d">-</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Alertas -->
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex-1 flex flex-col overflow-hidden min-h-[400px]">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm"><i data-lucide="list" class="w-4 h-4 inline mr-1"></i> Lista de Pendências</h3>
+                    <select id="filtro-alertas-idade" onchange="renderizarAlertas()" class="input-field text-sm max-w-xs">
+                        <option value="todos">Mostrar Todas as Pendências</option>
+                        <option value="90">Atenção (+90 dias)</option>
+                        <option value="180">Crítico (+180 dias)</option>
+                        <option value="365">Urgente (+1 Ano)</option>
+                    </select>
+                </div>
+                <div class="overflow-auto flex-1 p-0">
+                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                        <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-[10px] sm:text-xs sticky top-0 shadow-sm z-10">
+                            <tr>
+                                <th class="px-4 py-3">Munícipe</th>
+                                <th class="px-4 py-3 hidden sm:table-cell">Idade do Pedido</th>
+                                <th class="px-4 py-3 hidden md:table-cell">Categoria</th>
+                                <th class="px-4 py-3 text-right">Contato Ativo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-alertas" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tr><td colspan="4" class="text-center p-6 text-slate-400">Carregando dados...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -718,25 +835,30 @@
                         <i data-lucide="shield" class="w-5 h-5 text-yellow-500"></i> Painel Administrativo
                     </h2>
                 </div>
-                <!-- Abas -->
+
                 <div class="flex gap-1 border-b border-slate-200 dark:border-slate-700 -mb-px">
                     <button id="admin-tab-usuarios" onclick="trocarAbaAdmin('usuarios')"
                         class="px-4 py-2 text-sm border-b-2 border-blue-600 text-blue-700 font-bold transition">
                         <i data-lucide="users" class="w-4 h-4 inline mr-1"></i> Usuários
                     </button>
-                    <button id="admin-tab-liderancas" onclick="trocarAbaAdmin('liderancas')"
+                    <button id="admin-tab-listas" onclick="trocarAbaAdmin('listas')"
                         class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
-                        <i data-lucide="tag" class="w-4 h-4 inline mr-1"></i> Lideranças
+                        <i data-lucide="list" class="w-4 h-4 inline mr-1"></i> Listas Genéricas
                     </button>
+
                     <button id="admin-tab-valores" onclick="trocarAbaAdmin('valores')"
                         class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
                         <i data-lucide="dollar-sign" class="w-4 h-4 inline mr-1"></i> Valores
                     </button>
-                <button id="admin-tab-auditoria" onclick="trocarAbaAdmin('auditoria')"
-class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
-<i data-lucide="history" class="w-4 h-4 inline mr-1"></i> Auditoria (Logs)
-</button>
-</div>
+                    <button id="admin-tab-ferramentas" onclick="trocarAbaAdmin('ferramentas')"
+                        class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
+                        <i data-lucide="database" class="w-4 h-4 inline mr-1"></i> Ferramentas
+                    </button>
+                    <button id="admin-tab-auditoria" onclick="trocarAbaAdmin('auditoria')"
+                        class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition">
+                        <i data-lucide="history" class="w-4 h-4 inline mr-1"></i> Auditoria (Logs)
+                    </button>
+                </div>
             </div>
 
             <div class="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-900">
@@ -790,22 +912,59 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
     </div>
 </div>
 
-
-<!-- ABA: LIDERANÇAS -->
-                <div id="admin-content-liderancas" class="hidden">
+<!-- ABA: FERRAMENTAS DO BANCO -->
+<div id="admin-content-ferramentas" class="hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+            <i data-lucide="database" class="w-5 h-5 text-indigo-600"></i> Ferramentas do Banco de Dados
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="p-5 border border-emerald-100 bg-emerald-50 rounded-xl h-full flex flex-col">
+                <h4 class="font-bold text-emerald-800 text-sm mb-2">Injeção de Dados Iniciais</h4>
+                <p class="text-xs text-emerald-600 mb-4 flex-1">Sincroniza as listas oficiais padrão (Especialidades, Cirurgias, Categorias) com o banco de dados.</p>
+                <button onclick="if(window.seedInitialData) seedInitialData();" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Injetar Listas Padrão</button>
+            </div>
+            
+            <div class="p-5 border border-amber-100 bg-amber-50 rounded-xl h-full flex flex-col">
+                <h4 class="font-bold text-amber-800 text-sm mb-2">Limpeza de Duplicadas</h4>
+                <p class="text-xs text-amber-600 mb-4 flex-1">Varre todo o banco de dados em busca de opções repetidas e mantém apenas uma versão.</p>
+                <button onclick="if(window.limparDuplicadas) limparDuplicadas();" class="w-full px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Executar Limpeza</button>
+            </div>
+            
+            <div class="p-5 border border-rose-100 bg-rose-50 rounded-xl h-full flex flex-col">
+                <h4 class="font-bold text-rose-800 text-sm mb-2">Auditoria de Documentos</h4>
+                <p class="text-xs text-rose-600 mb-4 flex-1">Verifica todos os pacientes e encontra CPFs, SUS, Título e Telefones com problemas, permitindo correção em lote.</p>
+                <button onclick="if(window.auditarDocsBanco) auditarDocsBanco();" class="w-full px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2 shadow-sm"><i data-lucide="shield-alert" class="w-4 h-4"></i> Executar Auditoria de Docs</button>
+            </div>
+        </div>
+    </div>
+</div>
+                <div id="admin-content-listas" class="hidden">
                     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                        <div class="flex justify-between items-center mb-4">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                             <div>
-                                <h3 class="font-bold text-slate-800 dark:text-slate-100">Renomear Lideranças / Indicações</h3>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Renomear atualiza todos os munícipes vinculados automaticamente.</p>
+                                <h3 class="font-bold text-slate-800 dark:text-slate-100">Gerenciar Listas de Formulário</h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Adicione, edite ou exclua opções que aparecem nos menus (dropdowns).</p>
                             </div>
-                            <button onclick="carregarLiderancasAdmin()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg transition text-sm">Atualizar</button>
+                            <div class="flex gap-2 w-full md:w-auto">
+                                <select id="admin-select-lista" onchange="carregarListaAdmin()" class="input-field max-w-xs uppercase bg-slate-50 text-sm">
+                                    <option value="">Selecione uma lista...</option>
+                                </select>
+                                <button onclick="carregarListaAdmin()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg transition text-sm">Atualizar</button>
+                            </div>
                         </div>
-                        <div id="lista-liderancas-admin">
-                            <p class="text-slate-400 italic text-sm">Clique em "Atualizar" para carregar.</p>
+                        <div class="mb-4 flex gap-2">
+                            <button onclick="adicionarNovoItemLista()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Adicionar Nova Opção</button>
+                            <button onclick="extrairDadosParaListas()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition text-sm flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> Sincronizar Dados Antigos</button>
+                        </div>
+                        <div id="lista-generica-admin">
+                            <p class="text-slate-400 italic text-sm">Selecione uma lista acima para carregar.</p>
                         </div>
                     </div>
                 </div>
+
+
 
                 <!-- ABA: VALORES DE PROCEDIMENTOS -->
                 <div id="admin-content-valores" class="hidden">
@@ -850,7 +1009,11 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Mês / Ano</label>
-                            <input type="month" id="agenda-filtro-mes" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm focus:border-amber-500 outline-none" onchange="carregarAgenda()">
+                            <input type="month" id="agenda-filtro-mes" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm focus:border-amber-500 outline-none" onchange="document.getElementById('agenda-filtro-dia').value = ''; carregarAgenda()">
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Dia Específico (Opcional)</label>
+                            <input type="date" id="agenda-filtro-dia" class="w-full p-2 border border-slate-300 dark:border-slate-600 rounded text-sm focus:border-amber-500 outline-none" onchange="document.getElementById('agenda-filtro-mes').value = ''; carregarAgenda()">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Categoria</label>
@@ -1058,7 +1221,8 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
                         <div>
                             <h3 class="form-section-title">Dados Pessoais</h3>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                                <div class="md:col-span-8"><label class="label-field">Nome Completo *</label><input type="text" name="nome" id="field_nome" required class="input-field uppercase"></div>
+                                <div class="md:col-span-5"><label class="label-field">Nome Completo *</label><input type="text" name="nome" id="field_nome" required class="input-field uppercase"></div>
+                                <div class="md:col-span-3"><label class="label-field">CPF (Opcional no Pré)</label><input type="text" id="field_cpf_form" name="cpf_form" class="input-field" placeholder="000.000.000-00" oninput="this.value = this.value.replace(/\\D/g, '').replace(/^(\\d{3})(\\d)/, '$1.$2').replace(/^(\\d{3})\\.(\\d{3})(\\d)/, '$1.$2.$3').replace(/^(\\d{3})\\.(\\d{3})\\.(\\d{3})(\\d)/, '$1.$2.$3-$4').substr(0, 14)"></div>
                                 <div class="md:col-span-4"><label class="label-field">Nome Social</label><input type="text" name="nome_social" id="field_nome_social" class="input-field uppercase"></div>
                                 
                                 <div class="md:col-span-4"><label class="label-field">Referência</label><input type="text" name="apelido" id="field_apelido" class="input-field uppercase"></div>
@@ -1072,9 +1236,9 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
                                 <div class="md:col-span-4"><label class="label-field">WhatsApp *</label><input type="text" name="tel1" id="field_tel1" required class="input-field"></div>
                                 <div class="md:col-span-4"><label class="label-field">Telefone 2</label><input type="text" name="tel2" id="field_tel2" class="input-field"></div>
                                 <div class="md:col-span-4"><label class="label-field">Nº Prontuário</label><input type="text" name="prontuario" id="field_prontuario_paciente" class="input-field uppercase" placeholder="Caso possua"></div>
-                                
-                                <div class="md:col-span-6"><label class="label-field">Profissão</label><input type="text" name="profissao" id="field_profissao" class="input-field uppercase"></div>
-                                <div class="md:col-span-6"><label class="label-field">Cargo Eclesiástico</label><input type="text" name="cargo_eclesiastico" id="field_cargo_eclesiastico" class="input-field uppercase"></div>
+                                <div class="md:col-span-4"><label class="label-field">Profissão</label><input type="text" name="profissao" id="field_profissao" class="input-field uppercase"></div>
+                                <div class="md:col-span-4"><label class="label-field">Cargo Eclesiástico</label><input type="text" name="cargo_eclesiastico" id="field_cargo_eclesiastico" class="input-field uppercase"></div>
+                                <div class="md:col-span-4"><label class="label-field">Segmento</label><input type="text" name="segmento" id="field_segmento" class="input-field uppercase"></div>
                                 
                                 <div class="md:col-span-12"><label class="label-field">Parentes (Vínculos Familiares)</label><textarea name="parentes" id="field_parentes" rows="3" class="input-field uppercase" placeholder="Ex: Pai - João da Silva&#10;Mãe - Maria da Silva"></textarea></div>
                             </div>
@@ -1106,7 +1270,17 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
                                 <div class="md:col-span-6"><label class="label-field">Liderança?</label><select name="lideranca" id="field_lideranca" class="input-field bg-white dark:bg-slate-800 uppercase"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NAO">NÃO</option></select></div>
 
                                 <div class="md:col-span-12"><label class="label-field">Observações Gerais</label><textarea name="obs" id="field_obs" rows="3" class="input-field uppercase"></textarea></div>
-                                <div class="md:col-span-12"><label class="label-field flex items-center gap-2"><i data-lucide="link" class="w-4 h-4 text-blue-500"></i> Link de Documentos (Drive / Nuvem)</label><input type="url" name="documentos_link" id="field_documentos_link" class="input-field text-blue-600" placeholder="https://drive.google.com/... (Cole o link da pasta de documentos aqui)"></div>
+                                <div class="md:col-span-12">
+                                    <label class="label-field flex items-center gap-2"><i data-lucide="paperclip" class="w-4 h-4 text-blue-500"></i> Anexar Arquivos (Currículos, Docs - Máx 5MB)</label>
+                                    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg">
+                                        <input type="file" id="file_upload_documentos" multiple accept="image/*,.pdf,.doc,.docx" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200">
+                                        <button type="button" onclick="uploadArquivosPaciente()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-bold transition shadow-sm flex items-center gap-2 whitespace-nowrap"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Enviar</button>
+                                        <div id="upload_progress_paciente" class="text-sm text-blue-600 font-bold hidden flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Enviando...</div>
+                                    </div>
+                                    <div id="lista_arquivos_paciente" class="mt-3 flex flex-wrap gap-2 empty:hidden"></div>
+                                    <input type="hidden" name="arquivos_json" id="field_arquivos_json" value="[]">
+                                </div>
+
                             </div>
                         </div>
                         <div>
@@ -1177,23 +1351,25 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
                                 
                                 <!-- LINHA 4: Detalhes Específicos -->
                                 <div class="md:col-span-6" id="container_tipo"></div>
-                                <div class="md:col-span-6"><label class="label-field">Valor (R$)</label><input type="number" step="0.01" id="field_valor" class="input-field" placeholder="0,00"></div>
+                                <div class="md:col-span-6"><label class="label-field">Valor (R$)</label><input type="text" id="field_valor" class="input-field bg-slate-100 cursor-not-allowed" placeholder="Automático" readonly></div>
                                 
                                 <!-- LINHA 5: Datas e Status -->
-                                <div class="md:col-span-3"><label class="label-field">Data Marcação</label><input type="date" id="field_data_marcacao" onchange="calcularDataRisco()" class="input-field"></div>
-                                <div class="md:col-span-3"><label class="label-field">Data Risco (Auto)</label><input type="date" id="field_data_risco" class="input-field bg-slate-50 dark:bg-slate-900"></div>
-                                <div class="md:col-span-3"><label class="label-field">Data Conclusão</label><input type="date" id="field_data_conclusao" class="input-field"></div>
+                                <div class="md:col-span-3 hidden" id="container_data_marcacao"><label class="label-field">Data Marcação</label><input type="date" id="field_data_marcacao" onchange="calcularDataRisco()" class="input-field"></div>
+                                <div class="md:col-span-3 hidden" id="container_data_risco"><label class="label-field">Data Risco (Auto)</label><input type="date" id="field_data_risco" class="input-field bg-slate-50 dark:bg-slate-900"></div>
                                 <div class="md:col-span-3" id="container_status_atendimento"></div>
                                 
-                                <div class="md:col-span-6"><label class="label-field">Prioridade / Triagem</label>
-                                    <select id="field_prioridade" class="input-field bg-white dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-200">
-                                        <option value="BAIXA">🟢 Baixa Prioridade</option>
-                                        <option value="MEDIA">🟡 Média Prioridade</option>
-                                        <option value="ALTA">🟠 Alta Prioridade</option>
-                                        <option value="URGENTE">🔴 Urgente</option>
-                                    </select>
+                                <div class="md:col-span-6" id="container_prioridade"></div>
+                                <div class="md:col-span-12">
+                                    <label class="label-field flex items-center gap-2"><i data-lucide="paperclip" class="w-4 h-4 text-emerald-500"></i> Anexar Arquivos (Exames, Receitas - Máx 5MB)</label>
+                                    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg">
+                                        <input type="file" id="file_upload_atendimento" multiple accept="image/*,.pdf,.doc,.docx" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-900 dark:file:text-emerald-200">
+                                        <button type="button" onclick="uploadArquivosAtendimento()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg font-bold transition shadow-sm flex items-center gap-2 whitespace-nowrap"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Enviar</button>
+                                        <div id="upload_progress_atendimento" class="text-sm text-emerald-600 font-bold hidden flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Enviando...</div>
+                                    </div>
+                                    <div id="lista_arquivos_atendimento" class="mt-3 flex flex-wrap gap-2 empty:hidden"></div>
+                                    <input type="hidden" name="arquivos_json_atendimento" id="field_arquivos_json_atendimento" value="[]">
                                 </div>
-                                <div class="md:col-span-12"><label class="label-field flex items-center gap-2"><i data-lucide="link" class="w-4 h-4 text-emerald-500"></i> Link de Anexos (Exames, Receitas)</label><input type="url" id="field_anexos_link" class="input-field text-blue-600" placeholder="https://drive.google.com/... (Cole o link da nuvem)"></div>
+
                                 <div class="md:col-span-12"><label class="label-field">Observações do Item</label><textarea id="field_obs_atendimento" rows="2" class="input-field uppercase"></textarea></div>
                             </div>
                             <div class="flex justify-end">
@@ -1461,6 +1637,114 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
         </div>
     </div>
 
+    <!-- Modal Auditoria Documentos -->
+    <div id="modal-auditoria-docs" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl mx-4 overflow-hidden transform scale-95 transition-transform flex flex-col max-h-[90vh]" id="modal-auditoria-docs-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-rose-50 shrink-0">
+                <h3 class="font-bold text-rose-900 flex items-center gap-2"><i data-lucide="shield-alert" class="w-5 h-5 text-rose-600"></i> Auditoria de Documentos e Telefones</h3>
+                <button onclick="fecharModalAuditoriaDocs()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 flex-1 overflow-auto bg-slate-50">
+                <div id="loading-auditoria-docs" class="text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-rose-500 border-t-transparent mb-4"></div>
+                    <p class="text-slate-500 font-bold">Varrendo banco de dados, analisando CPFs, SUS, Títulos e Telefones...</p>
+                </div>
+                <div id="resultado-auditoria-docs" class="hidden">
+                    <div class="mb-4 flex flex-col md:flex-row items-start md:items-center gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xl shrink-0" id="total-docs-invalidos">0</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Cadastros com Dados Inválidos Encontrados</p>
+                            <p class="text-xs text-slate-500">Corrija os dados nos campos abaixo. Eles serão atualizados diretamente no banco.</p>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <button onclick="autoAjustarTodosDocs()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg transition text-sm flex items-center gap-2 border border-indigo-200">
+                                <i data-lucide="wand-2" class="w-4 h-4"></i> Auto-Ajustar Todos
+                            </button>
+                            <button onclick="salvarTodosAjustadosDocs(this)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition text-sm flex items-center gap-2 shadow-sm">
+                                <i data-lucide="save" class="w-4 h-4"></i> Salvar Todos Ajustados
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 text-slate-800 uppercase font-bold text-xs border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3">Paciente</th>
+                                    <th class="px-4 py-3">Campos Problemáticos (Edite e Salve)</th>
+                                    <th class="px-4 py-3 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-auditoria-docs-body" class="divide-y divide-slate-100">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Substituir Item de Lista -->
+    <div id="modal-substituir-lista" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform" id="modal-substituir-lista-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
+                <h3 class="font-bold text-indigo-900 flex items-center gap-2"><i data-lucide="git-merge" class="w-5 h-5 text-indigo-600"></i> Substituir Item</h3>
+                <button onclick="fecharSubstituirItemLista()" class="text-slate-400 hover:text-slate-600 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-slate-600 mb-4">Você está substituindo e excluindo o item:</p>
+                <div class="px-4 py-3 bg-red-50 text-red-800 font-bold rounded-lg border border-red-100 mb-6 uppercase text-sm" id="subs-item-antigo">ITEM ANTIGO</div>
+                
+                <label class="block text-sm font-bold text-slate-700 mb-2">Substituir por um item existente:</label>
+                <select id="subs-item-existente" class="input-field mb-4 text-sm uppercase">
+                    <option value="">Selecione um item (opcional)...</option>
+                </select>
+
+                <div class="flex items-center gap-4 my-2">
+                    <div class="h-px bg-slate-200 flex-1"></div>
+                    <span class="text-xs font-bold text-slate-400 uppercase">OU</span>
+                    <div class="h-px bg-slate-200 flex-1"></div>
+                </div>
+
+                <label class="block text-sm font-bold text-slate-700 mt-4 mb-2">Criar e substituir por um novo nome:</label>
+                <input type="text" id="subs-item-novo" class="input-field text-sm uppercase" placeholder="Digite o novo nome...">
+
+                <div class="mt-8 flex gap-3">
+                    <button onclick="fecharSubstituirItemLista()" class="flex-1 px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-lg hover:bg-slate-200 transition">Cancelar</button>
+                    <button onclick="confirmarSubstituicao()" class="flex-1 px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition shadow-md">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TIPO CADASTRO -->
+    <div id="modal-tipo-cadastro" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] hidden items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div id="modal-tipo-cadastro-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-blue-50">
+                <h3 class="font-bold text-blue-900 flex items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5 text-blue-600"></i> Novo Munícipe</h3>
+                <button onclick="fecharModalTipoCadastro()" class="text-blue-400 hover:text-blue-600 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-slate-600 mb-4">Escolha como deseja iniciar este cadastro:</p>
+                
+                <button onclick="iniciarCadastroCompleto()" class="w-full text-left p-4 border border-blue-200 hover:border-blue-500 rounded-xl hover:bg-blue-50 transition group flex gap-4 items-center">
+                    <div class="bg-blue-100 text-blue-600 p-3 rounded-lg group-hover:scale-110 transition-transform"><i data-lucide="fingerprint" class="w-6 h-6"></i></div>
+                    <div>
+                        <div class="font-bold text-slate-800 text-base">Cadastro Completo</div>
+                        <div class="text-xs text-slate-500 mt-1">Exige CPF válido. Recomendado.</div>
+                    </div>
+                </button>
+
+                <button onclick="iniciarPreCadastro()" class="w-full text-left p-4 border border-slate-200 hover:border-amber-500 rounded-xl hover:bg-amber-50 transition group flex gap-4 items-center">
+                    <div class="bg-amber-100 text-amber-600 p-3 rounded-lg group-hover:scale-110 transition-transform"><i data-lucide="user" class="w-6 h-6"></i></div>
+                    <div>
+                        <div class="font-bold text-slate-800 text-base">Pré Cadastro</div>
+                        <div class="text-xs text-slate-500 mt-1">Apenas Nome. CPF não exigido.</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPTS DINÂMICOS (CACHE BUSTING) -->
     <script>
         const scripts = [
@@ -1471,14 +1755,17 @@ class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700
             'js/ui-forms.js',
             'js/ui-tables.js',
             'js/admin-panel.js',
+            'js/admin-docs-audit.js',
             'js/charts.js',
             'js/api.js',
+            'js/alertas.js',
             'js/aniversariantes.js',
             'js/exporter.js',
             'js/agenda.js',
             'js/campanhas.js',
             'js/zap-v2.js',
-            'js/darkmode.js',
+            'js/masks.js',
+            'js/init-db.js',
             'js/main.js'
         ];
         // Adiciona um timestamp único para forçar o download dos scripts

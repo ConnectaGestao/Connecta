@@ -6,6 +6,7 @@ let todosCompromissos = [];
 async function carregarAgenda() {
     try {
         const mesAno = document.getElementById('agenda-filtro-mes') ? document.getElementById('agenda-filtro-mes').value : '';
+        const diaEspecifico = document.getElementById('agenda-filtro-dia') ? document.getElementById('agenda-filtro-dia').value : '';
         const categoria = document.getElementById('agenda-filtro-categoria') ? document.getElementById('agenda-filtro-categoria').value : '';
         
         const container = document.getElementById('agenda-lista');
@@ -22,7 +23,9 @@ async function carregarAgenda() {
         // Filtrar localmente (Firestore não aceita `LIKE` ou funções de mês fáceis)
         let listaFiltrada = [...todosCompromissos];
 
-        if (mesAno) {
+        if (diaEspecifico) {
+            listaFiltrada = listaFiltrada.filter(c => c.data === diaEspecifico);
+        } else if (mesAno) {
             listaFiltrada = listaFiltrada.filter(c => c.data && c.data.startsWith(mesAno));
         }
         
