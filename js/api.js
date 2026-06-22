@@ -65,7 +65,7 @@ async function carregarFiltros() {
                 if(!resultData[cat]) resultData[cat] = [];
                 if(!resultData[cat].includes(data.valor)) resultData[cat].push(data.valor);
                 
-                if (cat === 'PROCEDIMENTO' && data.preco_padrao) {
+                if (data.preco_padrao) {
                     window.precosPadraoProcedimentos[data.valor] = data.preco_padrao;
                 }
             }
