@@ -298,6 +298,11 @@ function preencherSelectInteligente(id, valor) {
         }
         sel.value = valor;
     }
+    
+    if (sel.tomselect) {
+        sel.tomselect.addOption({value: valor, text: valor});
+        sel.tomselect.setValue(valor);
+    }
 }
 
 function renderizarTabelaPacientes(lista) {
@@ -571,7 +576,13 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
             'parentes', 'titulo', 'documentos_link'
         ];
         
-        fields.forEach(k => { const el = document.getElementById(`field_${k}`); if(el) el.value = dados[k] || ''; });
+        fields.forEach(k => { 
+            const el = document.getElementById(`field_${k}`); 
+            if(el) {
+                el.value = dados[k] || ''; 
+                if (el.tomselect) el.tomselect.setValue(dados[k] || '');
+            } 
+        });
         
         const elPront = document.getElementById('field_prontuario_paciente');
         if(elPront) elPront.value = dados['prontuario'] || '';
