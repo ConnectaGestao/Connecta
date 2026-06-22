@@ -271,6 +271,7 @@ window.adicionarNovoItemLista = async function() {
             criacao: new Date().toISOString()
         });
         window.carregarListaAdmin();
+        if(typeof carregarFiltros === 'function') carregarFiltros();
     } catch(e) { alert('Erro ao adicionar: ' + e.message); }
 };
 
@@ -279,6 +280,7 @@ window.deletarItemLista = async function(id) {
     try {
         await window.deleteDoc(window.doc(window.db, 'config_selects', id));
         window.carregarListaAdmin();
+        if(typeof carregarFiltros === 'function') carregarFiltros();
     } catch(e) { alert('Erro ao deletar: ' + e.message); }
 };
 
@@ -370,6 +372,7 @@ window.confirmarSubstituicao = async function() {
         await window.deleteDoc(window.doc(window.db, 'config_selects', subsIdAntigoContext));
         window.fecharSubstituirItemLista();
         window.carregarListaAdmin();
+        if(typeof carregarFiltros === 'function') carregarFiltros();
         alert('Substituição realizada com sucesso!');
     } catch(e) {
         alert('Erro ao substituir: ' + e.message);

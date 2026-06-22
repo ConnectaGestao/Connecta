@@ -223,12 +223,33 @@ function renderizarSelectsVazios() {
     });
 }
 
+window.aplicarValorPadraoProc = function() {
+    const fieldValor = document.getElementById('field_valor');
+    if (!fieldValor) return;
+    
+    let foundPrice = '';
+    const selectIds = ['procedimento', 'especialidade', 'tipo_servico', 'tipo'];
+    
+    if (window.precosPadraoProcedimentos) {
+        for (let id of selectIds) {
+            const el = document.getElementById(`field_${id}`);
+            if (el && el.value && window.precosPadraoProcedimentos[el.value]) {
+                foundPrice = window.precosPadraoProcedimentos[el.value];
+                break;
+            }
+        }
+    }
+    
+    fieldValor.value = foundPrice;
+};
+
 function checkSelectNew(id) {
     const sel = document.getElementById(`sel_${id}`);
     if (sel) {
         document.getElementById(`field_${id}`).value = sel.value;
-        if (id === 'procedimento' && typeof aplicarValorPadraoProc === 'function') {
-            aplicarValorPadraoProc(sel.value);
+        
+        if (typeof window.aplicarValorPadraoProc === 'function') {
+            window.aplicarValorPadraoProc();
         }
         
         // Verifica se devemos mostrar os campos de Data Marcação e Risco

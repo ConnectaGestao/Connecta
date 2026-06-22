@@ -56,12 +56,18 @@ async function carregarFiltros() {
         
         const querySnapshot = await window.getDocs(window.collection(window.db, "config_selects"));
         const resultData = {};
+        window.precosPadraoProcedimentos = {};
+        
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             const cat = data.tipo || data.chave;
             if(cat && data.valor) {
                 if(!resultData[cat]) resultData[cat] = [];
                 if(!resultData[cat].includes(data.valor)) resultData[cat].push(data.valor);
+                
+                if (cat === 'PROCEDIMENTO' && data.preco_padrao) {
+                    window.precosPadraoProcedimentos[data.valor] = data.preco_padrao;
+                }
             }
         });
 
@@ -94,8 +100,36 @@ async function carregarFiltros() {
                 }
             });
         }
+        
+        if (typeof window.aplicarTomSelectGlobalmente === 'function') {
+            window.aplicarTomSelectGlobalmente();
+        }
     } catch (err) { console.error("Erro ao carregar filtros", err); }
 }
+
+window.aplicarTomSelectGlobalmente = function() {
+    if (typeof TomSelect === 'undefined') return;
+    const selects = document.querySelectorAll('select.input-field, select.tom-select-auto');
+    selects.forEach(sel => {
+        if (sel.tomselect) {
+            sel.tomselect.sync();
+        } else {
+            // Check if it's already hidden or disabled (TomSelect will hide the original anyway, but don't apply if it's a hidden original)
+            if(sel.style.display === 'none' && !sel.classList.contains('tomselected')) return;
+            new TomSelect(sel, {
+                create: false,
+                placeholder: sel.options[0] && sel.options[0].value === "" ? sel.options[0].text : "Pesquise ou selecione...",
+                allowEmptyOption: true,
+                maxOptions: 200,
+                onChange: function(value) {
+                    // manually trigger onchange event so our existing logic (like checkSelectNew) fires
+                    const event = new Event('change', { bubbles: true });
+                    sel.dispatchEvent(event);
+                }
+            });
+        }
+    });
+};
 
 function popularSelectComPadroes(sel, key, listaExtra) {
     sel.innerHTML = '<option value="">Selecione...</option>';
@@ -110,6 +144,11 @@ function popularSelectComPadroes(sel, key, listaExtra) {
     Array.from(conjuntoUnico).sort().forEach(op => {
         if(op) sel.innerHTML += `<option value="${op}">${op}</option>`;
     });
+    
+    // Sincroniza TomSelect se já existir
+    if (sel.tomselect) {
+        sel.tomselect.sync();
+    }
 }
 
 async function saveNewFilter(category, value) {

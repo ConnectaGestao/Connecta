@@ -25,12 +25,65 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    
+    <!-- Tom Select (para dropdowns pesquisáveis) -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
     <style>
         .flatpickr-day.has-cadastro {
             background-color: #dcfce7 !important;
             border-color: #86efac !important;
             color: #166534 !important;
             font-weight: bold;
+        }
+        
+        /* Tom Select Tailwind Adjustments */
+        .ts-wrapper.input-field {
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        .ts-control {
+            border: 1px solid #cbd5e1 !important; /* slate-300 */
+            border-radius: 0.5rem !important; /* rounded-lg */
+            padding: 0.625rem 0.75rem !important;
+            font-size: 0.875rem !important; /* text-sm */
+            line-height: 1.25rem !important;
+            box-shadow: none !important;
+            background-color: #fff !important;
+        }
+        .dark .ts-control {
+            background-color: #0f172a !important; /* slate-900 */
+            border-color: #334155 !important; /* slate-700 */
+            color: #e2e8f0 !important; /* slate-200 */
+        }
+        .dark .ts-control input { color: #e2e8f0 !important; }
+        .ts-dropdown {
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.5rem !important;
+            font-size: 0.875rem !important;
+            margin-top: 4px !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+        }
+        .dark .ts-dropdown {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        .dark .ts-dropdown .option {
+            color: #e2e8f0 !important;
+        }
+        .dark .ts-dropdown .option.active, .dark .ts-dropdown .option:hover {
+            background-color: #1e293b !important; /* slate-800 */
+            color: #fff !important;
+        }
+        .ts-wrapper.single .ts-control:after {
+            border-color: #64748b transparent transparent transparent !important; /* slate-500 */
+        }
+        .dark .ts-wrapper.single .ts-control:after {
+            border-color: #94a3b8 transparent transparent transparent !important; /* slate-400 */
         }
     </style>
     
