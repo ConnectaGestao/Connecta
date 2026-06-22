@@ -276,9 +276,11 @@ function preencherSelectInteligente(id, valor) {
     if(!valor) return;
     const sel = document.getElementById(`sel_${id}`);
     const hidden = document.getElementById(`field_${id}`);
+    if(!sel || !hidden) return;
     hidden.value = valor;
     sel.classList.remove('hidden');
-    document.getElementById(`grp_new_${id}`).classList.add('hidden');
+    const grpNew = document.getElementById(`grp_new_${id}`);
+    if (grpNew) grpNew.classList.add('hidden');
     
     let exists = false;
     for(let i=0; i<sel.options.length; i++) {
@@ -573,14 +575,24 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
             'nome','apelido','familia','rg','nascimento','sexo','tel1','tel2',
             'cep','logradouro','municipio_titulo','zona','secao','obs',
             'sus', 'referencia', 'lideranca', 'nome_social', 'conjuge',
-            'parentes', 'titulo', 'documentos_link'
+            'parentes', 'titulo', 'documentos_link', 'profissao', 'cargo_eclesiastico', 'segmento'
         ];
         
         fields.forEach(k => { 
             const el = document.getElementById(`field_${k}`); 
             if(el) {
-                el.value = dados[k] || ''; 
-                if (el.tomselect) el.tomselect.setValue(dados[k] || '');
+                let val = dados[k] || '';
+                if(typeof val === 'string' && !['obs', 'documentos_link'].includes(k)) {
+                    val = val.toUpperCase().trim();
+                    if (val === 'NÃO') val = 'NAO';
+                }
+                if (k === 'lideranca' && val === '') val = 'NAO';
+                
+                el.value = val; 
+                if (el.tomselect) {
+                    if (val) el.tomselect.addOption({value: val, text: val});
+                    el.tomselect.setValue(val);
+                }
             } 
         });
         
@@ -599,7 +611,7 @@ function mostrarFormularioPaciente(isEdit, dados = null) {
         const elBairro = document.getElementById('field_bairro');
         if (elBairro) elBairro.value = dados.bairro || dados.Bairro || '';
         
-        ['status_titulo', 'indicacao', 'profissao', 'cargo_eclesiastico', 'segmento'].forEach(k => { 
+        ['status_titulo', 'indicacao'].forEach(k => { 
             let val = dados[k];
             if (k === 'status_titulo') val = val || dados.situacao_eleitoral || dados.situacaoEleitoral || dados.municipio_titulo;
             if (k === 'indicacao') val = val || dados.quem_indicou || dados.QuemIndicou;
@@ -685,7 +697,7 @@ function abrirEdicaoAtendimento(at) {
     document.getElementById('field_obs_atendimento').value = at.obs_atendimento || '';
     if (document.getElementById('field_anexos_link')) document.getElementById('field_anexos_link').value = at.anexos_link || '';
 
-    ['tipo_servico','parceiro','especialidade','procedimento','local','tipo','status_atendimento'].forEach(k => {
+    ['tipo_servico','parceiro','especialidade','procedimento','local','tipo','status_atendimento','prioridade','tipos_exame'].forEach(k => {
         const val = k === 'status_atendimento' ? at.status : at[k];
         if (typeof preencherSelectInteligente === 'function') preencherSelectInteligente(k, val);
     });
@@ -888,17 +900,17 @@ window.destravarEndereco = function() {
 };
 
 window.calcularIdadeFormulario = function() {
-    const campoData = document.getElementById('field_nascimento').value;
+    const campoData = document.getElementById('field_nascimento');
     const spanIdade = document.getElementById('idade_calc');
-    if(!campoData || !spanIdade) return;
-    const nac = new Date(campoData);
+    if(!campoData || !spanIdade || !campoData.value) return;
+    const nac = new Date(campoData.value);
     const hoje = new Date();
     let idade = hoje.getFullYear() - nac.getFullYear();
     const m = hoje.getMonth() - nac.getMonth();
     if(m < 0 || (m === 0 && hoje.getDate() < nac.getDate())) {
         idade--;
     }
-    spanIdade.innerText = ( anos);
+    spanIdade.innerText = `${idade} anos`;
 };
 
 // ============================================================================

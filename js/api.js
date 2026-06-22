@@ -493,6 +493,10 @@ async function submitPaciente(e) {
             data.data_criacao = new Date().toISOString();
             const docRef = await window.addDoc(window.collection(window.db, "pacientes"), data);
             docId = docRef.id;
+            
+            if(typeof window.logAuditoria === 'function') {
+                window.logAuditoria('CRIAÇÃO', 'Munícipes', `Novo cadastro: ${data.nome} (CPF: ${data.cpf})`);
+            }
         } else {
             if (hasDuplicate) {
                 if (existingDocId !== docId) {
@@ -508,6 +512,10 @@ async function submitPaciente(e) {
             
             const { id, ...updateData } = data; // remove id from data
             await window.updateDoc(window.doc(window.db, "pacientes", docId), updateData);
+            
+            if(typeof window.logAuditoria === 'function') {
+                window.logAuditoria('EDIÇÃO', 'Munícipes', `Edição de cadastro: ${data.nome} (CPF: ${data.cpf})`);
+            }
         }
 
         if(typeof atualizarEstatisticas === 'function') {
@@ -901,7 +909,7 @@ async function initParceiros() {
     if (dashboardRawData.pacientes) {
         dashboardRawData.pacientes.forEach(p => {
             let ind = p.indicacao;
-            let isLider = (p.lideranca === 'SIM');
+            let isLider = (p.lideranca && p.lideranca.trim().toUpperCase() === 'SIM');
             
             if (!ind || ind.trim() === '' || ind === 'null' || ind === 'undefined') {
                 ind = 'SEM INDICAÇÃO';
@@ -910,10 +918,11 @@ async function initParceiros() {
             }
             
             if(!liderancaStats[ind]) {
-                liderancaStats[ind] = { nome: ind, total_pacientes: 0, total: 0, concluido: 0, pendente: 0, qtd: 0, isLider: false, lista: [] };
+                liderancaStats[ind] = { nome: ind, total_pacientes: 0, total: 0, concluido: 0, pendente: 0, qtd: 0, isLider: false, lista: [], listaPacientes: [] };
             }
             
             liderancaStats[ind].total_pacientes++;
+            liderancaStats[ind].listaPacientes.push(p);
             if(isLider) liderancaStats[ind].isLider = true;
         });
     }
@@ -925,10 +934,10 @@ async function initParceiros() {
         if (at.cpf_paciente && mapPacientes[at.cpf_paciente]) {
             const p = mapPacientes[at.cpf_paciente];
             ind = p.indicacao || at.indicacao;
-            isLider = (p.lideranca === 'SIM' || at.lideranca === 'SIM');
+            isLider = ((p.lideranca && p.lideranca.trim().toUpperCase() === 'SIM') || (at.lideranca && at.lideranca.trim().toUpperCase() === 'SIM'));
         } else {
             ind = at.indicacao;
-            isLider = (at.lideranca === 'SIM');
+            isLider = (at.lideranca && at.lideranca.trim().toUpperCase() === 'SIM');
         }
         
         if (!ind || ind.trim() === '' || ind === 'null' || ind === 'undefined') {
@@ -938,7 +947,7 @@ async function initParceiros() {
         }
         
         if(!liderancaStats[ind]) {
-            liderancaStats[ind] = { nome: ind, total_pacientes: 0, total: 0, concluido: 0, pendente: 0, qtd: 0, isLider: false, lista: [] };
+            liderancaStats[ind] = { nome: ind, total_pacientes: 0, total: 0, concluido: 0, pendente: 0, qtd: 0, isLider: false, lista: [], listaPacientes: [] };
         }
         
         const stat = liderancaStats[ind];
@@ -946,6 +955,7 @@ async function initParceiros() {
         stat.total++;
         stat.qtd++;
         if(at.status === 'CONCLUIDO') stat.concluido++; else stat.pendente++;
+        stat.lista.push(at);
         
         let dias = 0;
         if(at.data_abertura) {
@@ -968,7 +978,43 @@ async function initParceiros() {
     const listaLideranca = Object.values(liderancaStats).sort((a,b) => b.total - a.total);
     window.dadosRelatorioCache['lideranca'] = listaLideranca;
 
+    renderTabelaLiderancaBody(listaLideranca);
+}
+
+window.sortLiderancaCol = 'demandas';
+window.sortLiderancaDir = 'desc';
+
+window.ordenarTabelaLideranca = function(col) {
+    if(window.sortLiderancaCol === col) {
+        window.sortLiderancaDir = window.sortLiderancaDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        window.sortLiderancaCol = col;
+        window.sortLiderancaDir = col === 'nome' ? 'asc' : 'desc';
+    }
+    
+    const lista = window.dadosRelatorioCache['lideranca'];
+    if(!lista) return;
+
+    lista.sort((a, b) => {
+        let valA, valB;
+        if(col === 'nome') { valA = a.nome; valB = b.nome; }
+        else if(col === 'pessoas') { valA = a.total_pacientes; valB = b.total_pacientes; }
+        else if(col === 'demandas') { valA = a.total; valB = b.total; }
+        else if(col === 'concluido') { valA = a.concluido; valB = b.concluido; }
+        else if(col === 'pendente') { valA = a.pendente; valB = b.pendente; }
+        else if(col === 'perc') { valA = (a.concluido / (a.total||1)); valB = (b.concluido / (b.total||1)); }
+
+        if(valA < valB) return window.sortLiderancaDir === 'asc' ? -1 : 1;
+        if(valA > valB) return window.sortLiderancaDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    renderTabelaLiderancaBody(lista);
+}
+
+function renderTabelaLiderancaBody(listaLideranca) {
     const tbody = document.getElementById('tabela-lideranca-body');
+    if(!tbody) return;
     tbody.innerHTML = '';
     
     if(listaLideranca.length === 0) {
@@ -1372,8 +1418,10 @@ async function sendData(action, data, loadingId) {
                 const oldSnap = await window.getDoc(window.doc(window.db, "atendimentos", id));
                 if(oldSnap.exists) { dadosAnteriores = oldSnap.data(); }
                 await window.updateDoc(window.doc(window.db, "atendimentos", id), updateData);
+                if(typeof window.logAuditoria === 'function') window.logAuditoria('EDIÇÃO', 'Atendimentos', `Edição do atendimento de: ${updateData.nome_paciente} (CPF: ${updateData.cpf_paciente})`);
             } else {
-                await window.addDoc(window.collection(window.db, "atendimentos"), updateData);
+                const novoDoc = await window.addDoc(window.collection(window.db, "atendimentos"), updateData);
+                if(typeof window.logAuditoria === 'function') window.logAuditoria('CRIAÇÃO', 'Atendimentos', `Criação de atendimento para: ${updateData.nome_paciente} (CPF: ${updateData.cpf_paciente})`);
             }
 
             if(typeof atualizarEstatisticas === 'function') {

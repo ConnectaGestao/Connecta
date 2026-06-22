@@ -1051,7 +1051,7 @@ async function gerarListagem() {
         
         let lideresMap = new Map();
         todosPacientes.forEach(p => {
-            if (p.lideranca && p.lideranca.toUpperCase() === 'SIM') {
+            if (p.lideranca && p.lideranca.trim().toUpperCase() === 'SIM') {
                 const nome = (p.nome || '').trim().toUpperCase();
                 if (nome) lideresMap.set(nome, p);
             }
@@ -1080,7 +1080,7 @@ async function gerarListagem() {
         
         list.forEach(p => {
             let tel = p.tel || p.tel1 || p.whatsapp || p.telefone || '-';
-            let isLid = (p.lideranca || '').toUpperCase() === 'SIM' ? 'SIM' : 'NÃO';
+            let isLid = (p.lideranca || '').trim().toUpperCase() === 'SIM' ? 'SIM' : 'NÃO';
             let qtdIndicados = todosPacientes.filter(x => (x.indicacao||'').trim().toUpperCase() === (p.nome||'').trim().toUpperCase()).length;
             
             html += `

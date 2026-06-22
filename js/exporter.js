@@ -60,7 +60,7 @@ async function exportarExcel() {
             "Vínculos Familiares": p.parentes || '',
             "Nº Prontuário": p.prontuario || '',
             "Indicação (Liderança)": p.indicacao || '',
-            "É Liderança?": p.lideranca === 'SIM' ? 'SIM' : 'NÃO',
+            "É Liderança?": p.lideranca ? (String(p.lideranca).trim().toUpperCase() === 'SIM' ? 'SIM' : 'NÃO') : '',
             "Filiação (Mãe/Pai)": p.filiacao || '',
             "Cartão SUS": p.sus || '',
             "Título de Eleitor": p.titulo || '',

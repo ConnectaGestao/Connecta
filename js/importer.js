@@ -111,6 +111,13 @@ async function importarFiltros(filtrosRaw) {
 async function importarPacientes(pessoasRaw) {
     if (pessoasRaw.length === 0) return;
     
+    // DEBUG: Alert first row keys
+    try {
+        const firstRowNormalized = normalizeRow(pessoasRaw[0]);
+        const keys = Object.keys(firstRowNormalized).join(" | ");
+        alert("CHAVES RECONHECIDAS:\n" + keys);
+    } catch(e) { console.error("Erro no debug", e); }
+    
     const chunkSize = 500;
     for (let i = 0; i < pessoasRaw.length; i += chunkSize) {
         const chunk = pessoasRaw.slice(i, i + chunkSize);
@@ -121,30 +128,37 @@ async function importarPacientes(pessoasRaw) {
             const row = normalizeRow(rawRow);
             const docRef = window.doc(pacientesRef, String(row.ID || window.doc(pacientesRef).id));
             batch.set(docRef, {
-                nome: String(row.NOME || ''),
-                apelido: String(row.APELIDO || ''),
+                nome: String(row.NOME || row['NOME COMPLETO'] || ''),
+                nome_social: String(row.NOME_SOCIAL || row['NOME SOCIAL'] || ''),
+                apelido: String(row.APELIDO || row.REFERENCIA || ''),
                 cpf: String(row.CPF || '').replace(/\D/g, ''),
                 rg: String(row.RG || ''),
-                nascimento: parseExcelDate(row.NASCIMENTO),
-                sexo: String(row.SEXO || ''),
+                nascimento: parseExcelDate(row.NASCIMENTO || row['DATA NASC.']),
+                sexo: String(row.SEXO || '').toUpperCase().trim(),
                 familia: String(row.FAMILIA || ''),
-                tel1: String(row.TEL1 || row.TELEFONE_1 || row.TELEFONE || ''),
-                tel2: String(row.TEL2 || row.TELEFONE_2 || ''),
+                conjuge: String(row.CONJUGE || ''),
+                tel1: String(row.TEL1 || row.TELEFONE_1 || row.TELEFONE || row['TELEFONE 1 (WHATSAPP)'] || ''),
+                tel2: String(row.TEL2 || row.TELEFONE_2 || row['TELEFONE 2'] || ''),
+                profissao: String(row.PROFISSAO || ''),
+                cargo_eclesiastico: String(row.CARGO_ECLESIASTICO || row['CARGO ECLESIASTICO'] || ''),
+                parentes: String(row.PARENTES || row['VINCULOS FAMILIARES'] || ''),
+                prontuario: String(row.PRONTUARIO || row['Nº PRONTUARIO'] || ''),
+                filiacao: String(row.FILIACAO || row['FILIACAO (MAE/PAI)'] || ''),
                 cep: String(row.CEP || ''),
                 logradouro: String(row.LOGRADOURO || row.ENDERECO || ''),
                 bairro: String(row.BAIRRO || ''),
                 municipio: String(row.MUNICIPIO || row.CIDADE || ''),
                 referencia: String(row.PONTO_DE_REFERENCIA || row.REFERENCIA || ''),
-                sus: String(row.SUS || ''),
-                titulo: String(row.TITULO_ELEITOR || row.TITULO || ''),
-                zona: String(row.ZONA || ''),
-                secao: String(row.SECAO || ''),
-                status_titulo: String(row.STATUS_TITULO || row.SITUACAO_ELEITORAL || row.SITUACAO || ''),
-                municipio_titulo: String(row.MUNICIPIO_TITULO || row.VOTA_NO_MUNICIPIO || ''),
-                indicacao: String(row.INDICACAO || row.QUEM_INDICOU || ''),
-                lideranca: String(row.LIDERANCA || ''),
+                sus: String(row.SUS || row['CARTAO SUS'] || ''),
+                titulo: String(row.TITULO_ELEITOR || row.TITULO || row['TITULO DE ELEITOR'] || ''),
+                zona: String(row.ZONA || row['ZONA ELEITORAL'] || ''),
+                secao: String(row.SECAO || row['SECAO ELEITORAL'] || ''),
+                status_titulo: String(row.STATUS_TITULO || row.SITUACAO_ELEITORAL || row.SITUACAO || row['SITUACAO TITULO'] || ''),
+                municipio_titulo: String(row.MUNICIPIO_TITULO || row.VOTA_NO_MUNICIPIO || row['LOCAL DE VOTACAO'] || ''),
+                indicacao: String(row.INDICACAO || row.QUEM_INDICOU || row['INDICACAO (LIDERANCA)'] || ''),
+                lideranca: String(row.LIDERANCA || row['E LIDERANCA?'] || '').toUpperCase().trim(),
                 obs: String(row.OBS || row.OBSERVACOES || row.OBSERVACAO || ''),
-                data_criacao: row.DATA_CADASTRO ? parseExcelDate(row.DATA_CADASTRO) : new Date().toISOString()
+                data_criacao: row.DATA_CADASTRO ? parseExcelDate(row.DATA_CADASTRO) : (row['CRIADO EM'] ? parseExcelDate(row['CRIADO EM']) : new Date().toISOString())
             });
         });
         await batch.commit();

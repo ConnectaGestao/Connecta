@@ -60,6 +60,68 @@ window.showModalConfirm = function(msg) {
 };
 
 // ============================================================================
+/**
+ * js/ui.js
+ * Funções de manipulação da interface (DOM) e lógica de visualização.
+ */
+
+// ============================================================================
+// MODAIS GLOBAIS (CUSTOM ALERT / CONFIRM)
+// ============================================================================
+window.showModalAlert = function(msg) {
+    return new Promise(resolve => {
+        const modal = document.getElementById('global-modal-alert');
+        const text = document.getElementById('global-alert-msg');
+        const btn = document.getElementById('global-alert-btn');
+        if(!modal) { alert(msg); resolve(); return; } // Fallback
+        
+        text.innerText = msg;
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        
+        const closeModal = () => {
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                btn.removeEventListener('click', closeModal);
+                resolve();
+            }, 300);
+        };
+        btn.addEventListener('click', closeModal);
+    });
+};
+
+window.showModalConfirm = function(msg) {
+    return new Promise(resolve => {
+        const modal = document.getElementById('global-modal-confirm');
+        const text = document.getElementById('global-confirm-msg');
+        const btnOk = document.getElementById('global-confirm-ok');
+        const btnCancel = document.getElementById('global-confirm-cancel');
+        if(!modal) { resolve(confirm(msg)); return; } // Fallback
+        
+        text.innerText = msg;
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        
+        const closeModal = (result) => {
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                btnOk.removeEventListener('click', onOk);
+                btnCancel.removeEventListener('click', onCancel);
+                resolve(result);
+            }, 300);
+        };
+        
+        const onOk = () => closeModal(true);
+        const onCancel = () => closeModal(false);
+        
+        btnOk.addEventListener('click', onOk);
+        btnCancel.addEventListener('click', onCancel);
+    });
+};
+
+// ============================================================================
 // VARIí VEIS GLOBAIS DE UI
 // ============================================================================
 window.historicoAtualCache = []; // Armazena o histórico do munícipe atual para impressão
@@ -69,34 +131,68 @@ window.historicoAtualCache = []; // Armazena o histórico do munícipe atual par
 // ============================================================================
 window.buscarCep = async function(cep) {
     const limpo = cep.replace(/\D/g, '');
-    if (limpo.length !== 8) return;
+    const logradouro = document.getElementById('field_logradouro');
+    const bairro = document.getElementById('field_bairro');
+    const municipio = document.getElementById('field_municipio');
+    
+    const unlockFields = () => {
+        if(bairro) {
+            bairro.readOnly = false;
+            bairro.classList.remove('bg-slate-100', 'dark:bg-slate-950', 'cursor-not-allowed');
+            bairro.placeholder = 'Escreva o bairro manualmente';
+        }
+        if(municipio) {
+            municipio.readOnly = false;
+            municipio.classList.remove('bg-slate-100', 'dark:bg-slate-950', 'cursor-not-allowed');
+            municipio.placeholder = 'Escreva a cidade manualmente';
+        }
+        if(logradouro) logradouro.readOnly = false;
+    };
+    
+    if (limpo.length !== 8) {
+        unlockFields();
+        return;
+    }
     
     try {
         const res = await fetch(`https://viacep.com.br/ws/${limpo}/json/`);
         const data = await res.json();
         if (!data.erro) {
-            const logradouro = document.getElementById('field_logradouro');
-            const bairro = document.getElementById('field_bairro');
-            const municipio = document.getElementById('field_municipio');
-            
-            if (logradouro) logradouro.value = (data.logradouro || '').toUpperCase();
+            if (logradouro) {
+                logradouro.value = (data.logradouro || '').toUpperCase();
+                logradouro.readOnly = !!data.logradouro;
+            }
             if (bairro) {
                 bairro.value = (data.bairro || '').toUpperCase();
                 bairro.readOnly = !!data.bairro;
-                if (data.bairro) bairro.classList.add('bg-slate-100', 'cursor-not-allowed');
-                else bairro.classList.remove('bg-slate-100', 'cursor-not-allowed');
+                if (data.bairro) {
+                    bairro.classList.add('bg-slate-100', 'dark:bg-slate-950', 'cursor-not-allowed');
+                    bairro.placeholder = '';
+                } else {
+                    bairro.classList.remove('bg-slate-100', 'dark:bg-slate-950', 'cursor-not-allowed');
+                    bairro.placeholder = 'Escreva o bairro manualmente';
+                }
             }
             if (municipio) {
                 municipio.value = (data.localidade || "").toUpperCase();
                 municipio.readOnly = !!data.localidade;
-                if (data.localidade) municipio.classList.add("bg-slate-100", "cursor-not-allowed");
-                else municipio.classList.remove("bg-slate-100", "cursor-not-allowed");
+                if (data.localidade) {
+                    municipio.classList.add("bg-slate-100", "dark:bg-slate-950", "cursor-not-allowed");
+                    municipio.placeholder = '';
+                } else {
+                    municipio.classList.remove("bg-slate-100", "dark:bg-slate-950", "cursor-not-allowed");
+                    municipio.placeholder = 'Escreva a cidade manualmente';
+                }
             }
+        } else {
+            unlockFields();
         }
     } catch(e) {
         console.error("Erro ao buscar CEP", e);
+        unlockFields();
     }
 };
+
 // ============================================================================
 // 1. LOGIN E PERMISSÕES (FIREBASE AUTH)
 // ============================================================================
@@ -183,7 +279,11 @@ function efetuarLogin() {
 
     window.auth.signInWithEmailAndPassword(email, psw)
         .then(() => {
-            sucessoEl.innerText = "Login realizado com sucesso! Aguarde...";
+            if(typeof window.logAuditoria === 'function') {
+            window.logAuditoria('LOGIN', 'Autenticação', `Login realizado com email: ${email}`);
+        }
+        
+        sucessoEl.innerText = "Login realizado com sucesso! Aguarde...";
             sucessoEl.classList.remove('hidden');
 
             // Salvar no cache (localStorage) com token (base64 da senha para 1-click login)
@@ -481,32 +581,63 @@ function abrirListaRelatorio(tipo, index) {
     if(!dados) return;
 
     document.getElementById('modal-lista-relatorio').classList.remove('hidden');
-    document.getElementById('titulo-modal-relatorio').innerText = `${dados.nome} (${dados.qtd})`;
+    document.getElementById('titulo-modal-relatorio').innerText = `${dados.nome} (${tipo === 'lideranca' ? dados.total_pacientes : dados.qtd})`;
     const tbody = document.getElementById('tbody-modal-relatorio');
     tbody.innerHTML = '';
+    
+    if (tipo === 'lideranca') {
+        document.getElementById('th-col1').innerText = 'Nascimento';
+        document.getElementById('th-col2').innerText = 'Paciente Indicado';
+        document.getElementById('th-col3').innerText = 'Telefone';
+    } else {
+        document.getElementById('th-col1').innerText = 'Data Abertura';
+        document.getElementById('th-col2').innerText = 'Munícipe';
+        document.getElementById('th-col3').innerText = 'Espera';
+    }
 
-    dados.lista.forEach(at => {
+    const listaParaRenderizar = tipo === 'lideranca' ? (dados.listaPacientes || []) : dados.lista;
+
+    listaParaRenderizar.forEach(item => {
         const tempId = 'rel_item_' + Math.random().toString(36).substr(2, 9);
-        window[tempId] = at;
+        window[tempId] = item;
         const tr = document.createElement('tr');
         tr.className = "hover:bg-blue-50 cursor-pointer transition border-b border-slate-50";
-        let badgeEspera = "bg-slate-100 text-slate-600";
-        if(at.diasEspera > 90) badgeEspera = "bg-red-100 text-red-700";
-        else if(at.diasEspera > 30) badgeEspera = "bg-orange-100 text-orange-700";
-        else badgeEspera = "bg-green-100 text-green-700";
+        
+        if (tipo === 'lideranca') {
+            const tel = item.tel || item.tel1 || item.whatsapp || item.telefone || '-';
+            const nasc = item.nascimento ? item.nascimento.split('-').reverse().join('/') : '-';
+            tr.innerHTML = `
+                <td class="px-6 py-3 font-mono text-xs text-slate-500">${nasc}</td>
+                <td class="px-6 py-3">
+                    <div class="font-bold text-slate-700 text-sm uppercase">${item.nome}</div>
+                    <div class="text-xs text-slate-400 flex gap-2"><span>CPF: ${item.cpf || '...'}</span></div>
+                </td>
+                <td class="px-6 py-3 text-right"><span class="font-bold text-slate-600">${tel}</span></td>
+            `;
+            tr.onclick = () => {
+                document.getElementById('modal-lista-relatorio').classList.add('hidden');
+                switchTab('lista-pacientes'); // Navega pra tela de pacientes
+                if(typeof abrirEdicaoDireta === 'function') abrirEdicaoDireta(item.cpf, item.id);
+            };
+        } else {
+            let badgeEspera = "bg-slate-100 text-slate-600";
+            if(item.diasEspera > 90) badgeEspera = "bg-red-100 text-red-700";
+            else if(item.diasEspera > 30) badgeEspera = "bg-orange-100 text-orange-700";
+            else badgeEspera = "bg-green-100 text-green-700";
 
-        tr.innerHTML = `
-            <td class="px-6 py-3 font-mono text-xs text-slate-500">${at.data_abertura ? at.data_abertura.split('-').reverse().join('/') : '-'}</td>
-            <td class="px-6 py-3">
-                <div class="font-bold text-slate-700 text-sm uppercase">${at.nome}</div>
-                <div class="text-xs text-slate-400 flex gap-2"><span>${at.local || 'Local N/I'}</span><span class="text-slate-300">|</span><span>CPF: ${at.cpf || '...'}</span></div>
-            </td>
-            <td class="px-6 py-3 text-right"><span class="${badgeEspera} px-2 py-1 rounded text-xs font-bold">${at.diasEspera} dias</span></td>
-        `;
-        tr.onclick = () => {
-            document.getElementById('modal-lista-relatorio').classList.add('hidden');
-            abrirDetalheAtendimento(window[tempId]);
-        };
+            tr.innerHTML = `
+                <td class="px-6 py-3 font-mono text-xs text-slate-500">${item.data_abertura ? item.data_abertura.split('-').reverse().join('/') : '-'}</td>
+                <td class="px-6 py-3">
+                    <div class="font-bold text-slate-700 text-sm uppercase">${item.nome}</div>
+                    <div class="text-xs text-slate-400 flex gap-2"><span>${item.local || 'Local N/I'}</span><span class="text-slate-300">|</span><span>CPF: ${item.cpf || '...'}</span></div>
+                </td>
+                <td class="px-6 py-3 text-right"><span class="${badgeEspera} px-2 py-1 rounded text-xs font-bold">${item.diasEspera} dias</span></td>
+            `;
+            tr.onclick = () => {
+                document.getElementById('modal-lista-relatorio').classList.add('hidden');
+                if(typeof abrirDetalheAtendimento === 'function') abrirDetalheAtendimento(window[tempId]);
+            };
+        }
         tbody.appendChild(tr);
     });
 }
