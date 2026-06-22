@@ -22,6 +22,17 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    <style>
+        .flatpickr-day.has-cadastro {
+            background-color: #dcfce7 !important;
+            border-color: #86efac !important;
+            color: #166534 !important;
+            font-weight: bold;
+        }
+    </style>
     
     <!-- FIREBASE (Compat v8) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -710,6 +721,29 @@
 
         <!-- VIEW RELATÓRIOS -->
         <div id="view-relatorios" class="hidden fade-in">
+            <!-- CADASTROS POR DATA -->
+            <div class="mb-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="calendar-search" class="w-5 h-5 text-blue-500"></i> Cadastros Realizados por Data</h2>
+                        <p class="text-slate-400 text-xs mt-0.5">Consulte quem foi cadastrado em um dia específico</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <input type="date" id="filtro_data_cadastro" class="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <button onclick="buscarCadastrosPorData()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2">
+                            <i data-lucide="search" class="w-4 h-4"></i> Buscar
+                        </button>
+                        <button onclick="buscarCadastrosPorData('hoje')" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2">
+                            <i data-lucide="calendar-check" class="w-4 h-4"></i> Hoje
+                        </button>
+                        <button onclick="buscarCadastrosPorData('ontem')" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2">
+                            <i data-lucide="calendar-minus" class="w-4 h-4"></i> Ontem
+                        </button>
+                    </div>
+                </div>
+                <div id="resultado_cadastros_data" class="text-slate-400 text-sm italic">Selecione uma data acima para ver os cadastros.</div>
+            </div>
+
             <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4 border-b border-slate-200 dark:border-slate-700 pb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="bar-chart-2" class="text-indigo-600"></i> Relatórios de Espera</h2>
@@ -955,8 +989,8 @@
                             </div>
                         </div>
                         <div class="mb-4 flex gap-2">
-                            <button onclick="adicionarNovoItemLista()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Adicionar Nova Opção</button>
-                            <button onclick="extrairDadosParaListas()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition text-sm flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> Sincronizar Dados Antigos</button>
+                            <button onclick="adicionarNovoItemLista()" id="btn-adicionar-lista-gen" data-access="admin" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition text-sm flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Adicionar Nova Opção</button>
+                            <button onclick="extrairDadosParaListas()" data-access="admin" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition text-sm flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> Sincronizar Dados Antigos</button>
                         </div>
                         <div id="lista-generica-admin">
                             <p class="text-slate-400 italic text-sm">Selecione uma lista acima para carregar.</p>
@@ -1233,7 +1267,7 @@
                                 <div class="md:col-span-4"><label class="label-field">Cônjuge</label><input type="text" name="conjuge" id="field_conjuge" class="input-field uppercase"></div>
                                 <div class="md:col-span-4"><label class="label-field">Sexo</label><select name="sexo" id="field_sexo" class="input-field bg-white dark:bg-slate-800"><option value="">Selecione...</option><option value="MASCULINO">Masculino</option><option value="FEMININO">Feminino</option><option value="OUTRO">Outro</option></select></div>
                                 
-                                <div class="md:col-span-4"><label class="label-field">WhatsApp *</label><input type="text" name="tel1" id="field_tel1" required class="input-field"></div>
+                                <div class="md:col-span-4"><label class="label-field">WhatsApp</label><input type="text" name="tel1" id="field_tel1" class="input-field"></div>
                                 <div class="md:col-span-4"><label class="label-field">Telefone 2</label><input type="text" name="tel2" id="field_tel2" class="input-field"></div>
                                 <div class="md:col-span-4"><label class="label-field">Nº Prontuário</label><input type="text" name="prontuario" id="field_prontuario_paciente" class="input-field uppercase" placeholder="Caso possua"></div>
                                 <div class="md:col-span-4"><label class="label-field">Profissão</label><input type="text" name="profissao" id="field_profissao" class="input-field uppercase"></div>
@@ -1336,10 +1370,10 @@
                         <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100 shadow-sm">
                             <h3 class="form-section-title text-emerald-700 border-emerald-200">Adicionar Procedimentos</h3>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
-                                <!-- LINHA 1: Data, Local e Prontuário (Condicional) -->
                                 <!-- LINHA 1: Data, Local -->
-                                <div class="md:col-span-3"><label class="label-field">Data Abertura</label><input type="date" id="data_abertura" class="input-field"></div>
-                                <div class="md:col-span-9" id="container_local"></div>
+                                <div class="md:col-span-3"><label class="label-field">Data Abertura</label><input type="date" id="data_abertura" class="input-field flatpickr-input"></div>
+                                <div class="md:col-span-3" id="container_data_marcacao"><label class="label-field">Data Agendamento</label><input type="date" id="field_data_marcacao" onchange="calcularDataRisco()" class="input-field flatpickr-input"></div>
+                                <div class="md:col-span-6" id="container_local"></div>
 
                                 <!-- LINHA 2: Categoria, Especialidade -->
                                 <div class="md:col-span-6" id="container_tipo_servico"></div>
@@ -1354,11 +1388,10 @@
                                 <div class="md:col-span-6"><label class="label-field">Valor (R$)</label><input type="text" id="field_valor" class="input-field bg-slate-100 cursor-not-allowed" placeholder="Automático" readonly></div>
                                 
                                 <!-- LINHA 5: Datas e Status -->
-                                <div class="md:col-span-3 hidden" id="container_data_marcacao"><label class="label-field">Data Marcação</label><input type="date" id="field_data_marcacao" onchange="calcularDataRisco()" class="input-field"></div>
-                                <div class="md:col-span-3 hidden" id="container_data_risco"><label class="label-field">Data Risco (Auto)</label><input type="date" id="field_data_risco" class="input-field bg-slate-50 dark:bg-slate-900"></div>
+                                <div class="md:col-span-3 hidden" id="container_data_risco"><label class="label-field">Data Risco (Auto)</label><input type="date" id="field_data_risco" class="input-field flatpickr-input bg-slate-50 dark:bg-slate-900"></div>
                                 <div class="md:col-span-3" id="container_status_atendimento"></div>
-                                
                                 <div class="md:col-span-6" id="container_prioridade"></div>
+                                
                                 <div class="md:col-span-12">
                                     <label class="label-field flex items-center gap-2"><i data-lucide="paperclip" class="w-4 h-4 text-emerald-500"></i> Anexar Arquivos (Exames, Receitas - Máx 5MB)</label>
                                     <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg">

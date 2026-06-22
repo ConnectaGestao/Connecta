@@ -252,39 +252,45 @@ function imprimirFicha() {
                 <table style="${styleTable}">
                     <thead>
                         <tr>
-                            <th style="${styleTh} width: 60px;">Data</th>
-                            <th style="${styleTh} width: 70px;">Status</th>
-                            <th style="${styleTh}">Classificação</th>
-                            <th style="${styleTh}">Procedimento / Especialidade</th>
-                            <th style="${styleTh}">Local / Prontuário</th>
-                            <th style="${styleTh}">Agendamento</th>
-                            <th style="${styleTh} text-align: right; width: 70px;">Valor</th>
+                             <th style="${styleTh} width: 60px;">Abertura</th>
+                             <th style="${styleTh} width: 75px;">Agendamento</th>
+                             <th style="${styleTh} width: 70px;">Status</th>
+                             <th style="${styleTh}">Classificação</th>
+                             <th style="${styleTh}">Procedimento / Especialidade</th>
+                             <th style="${styleTh}">Local / Prontuário</th>
+                             <th style="${styleTh} text-align: right; width: 70px;">Valor</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
         
         window.historicoAtualCache.forEach(h => {
-            const dataFmt = h.data_abertura ? h.data_abertura.split('-').reverse().join('/') : '-';
+            const dataAberturaFmt = h.data_abertura ? h.data_abertura.split('-').reverse().join('/') : '-';
             const catTipo = `${h.tipo_servico || ''}<br><span style="color:#666; font-size:8px">${h.tipo || ''}</span>`;
             const espProc = `<b>${h.especialidade || ''}</b><br>${h.procedimento || ''}`;
             const localPront = `<b>${h.local || '-'}</b>${h.prontuario ? `<br>Pront: ${h.prontuario}` : ''}`;
             
-            let agendamento = '-';
-            if (h.data_marcacao) agendamento = `Marc: ${h.data_marcacao.split('-').reverse().join('/')}`;
-            if (h.data_conclusao) agendamento += `<br>Conc: ${h.data_conclusao.split('-').reverse().join('/')}`;
+            let agendamentoFmt = '-';
+            let diasEspera = '';
+            if (h.data_marcacao) {
+                agendamentoFmt = h.data_marcacao.split('-').reverse().join('/');
+                if (h.data_abertura) {
+                    const diff = Math.ceil((new Date(h.data_marcacao) - new Date(h.data_abertura)) / (1000 * 60 * 60 * 24));
+                    if (diff >= 0) diasEspera = `<br><span style="color:#888; font-size:8px">(${diff} dias de espera)</span>`;
+                }
+            }
 
             const valorFloat = parseFloat(h.valor) || 0;
             totalGeral += valorFloat;
 
             historyHtml += `
                 <tr>
-                    <td style="${styleTd}">${dataFmt}</td>
+                    <td style="${styleTd}">${dataAberturaFmt}</td>
+                    <td style="${styleTd}">${agendamentoFmt}${diasEspera}</td>
                     <td style="${styleTd}"><b>${h.status || '-'}</b></td>
                     <td style="${styleTd}">${catTipo}</td>
                     <td style="${styleTd}">${espProc}</td>
                     <td style="${styleTd}">${localPront}</td>
-                    <td style="${styleTd}">${agendamento}</td>
                     <td style="${styleTdRight}">${money(valorFloat)}</td>
                 </tr>
                 ${h.obs_atendimento ? `<tr><td colspan="7" style="border-bottom: 1px solid #eee; padding: 2px 4px 4px 4px; color: #555; font-style: italic; font-size: 9px; background-color: #fcfcfc;">Obs: ${h.obs_atendimento}</td></tr>` : ''}
@@ -712,9 +718,14 @@ async function verHistoricoCompleto(p) {
                                 </div>` : ''}
                                 ${at.data_marcacao ? `
                                 <div class="col-span-2 sm:col-span-1 bg-blue-50 p-2 rounded border border-blue-100 mt-2">
-                                    <span class="text-[10px] font-bold text-blue-400 uppercase block">Marcado Para</span>
+                                    <span class="text-[10px] font-bold text-blue-400 uppercase block">Agendado Para</span>
                                     <span class="font-bold text-blue-800">${at.data_marcacao.split('-').reverse().join('/')}</span>
-                                </div>` : ''}
+                                    ${at.data_abertura ? `<span class="text-[10px] text-blue-400 block">${Math.ceil((new Date(at.data_marcacao) - new Date(at.data_abertura)) / (1000*60*60*24))} dias de espera</span>` : ''}
+                                </div>` : `
+                                <div class="col-span-2 sm:col-span-1 bg-slate-50 p-2 rounded border border-slate-200 mt-2">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase block">Agendado Para</span>
+                                    <span class="text-slate-400 italic text-xs">Sem data de agendamento</span>
+                                </div>`}
                                 ${at.data_conclusao ? `
                                 <div class="col-span-2 sm:col-span-1 bg-emerald-50 p-2 rounded border border-emerald-100 mt-2">
                                     <span class="text-[10px] font-bold text-emerald-600 uppercase block">Conclusão / Prazo</span>
@@ -738,7 +749,18 @@ async function verHistoricoCompleto(p) {
                     </div>
                 `;
             }).join('');
-            timeline.innerHTML = itemsHtml;
+            timeline.innerHTML = `
+                <div class="mb-4 sticky top-0 bg-white dark:bg-slate-800 pt-1 pb-3 z-10 border-b border-slate-100 dark:border-slate-700">
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        <input type="text" id="busca_historico" placeholder="Buscar por tipo, especialidade, local, status..." 
+                            class="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            oninput="filtrarHistoricoTimeline(this.value)">
+                    </div>
+                </div>
+                <div id="hist-timeline-items">${itemsHtml}</div>`;
+            
+            window._historicoItemsHtml = itemsHtml;
         }
         
         if(typeof lucide !== 'undefined') lucide.createIcons();

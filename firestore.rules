@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Funcao auxiliar: Verifica se o usuario esta logado
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    // Funcao auxiliar: Verifica se o usuario logado eh Admin
+    function isAdmin() {
+      return isAuth() && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.perfil == 'ADMIN';
+    }
+    
+    // -------------------------------------------------------------------------
+    // COLECOES DO SISTEMA
+    // -------------------------------------------------------------------------
+
+    match /pacientes/{pacienteId} {
+      allow read, create, update: if isAuth();
+      allow delete: if isAdmin() || isAuth(); 
+    }
+    
+    match /atendimentos/{atendimentoId} {
+      allow read, create, update, delete: if isAuth();
+    }
+    
+    match /parceiros/{parceiroId} {
+      allow read, create, update, delete: if isAuth();
+    }
+    
+    match /usuarios/{usuarioId} {
+      // Qualquer usuario logado pode ler a lista
+      allow read: if isAuth();
+      // O proprio usuario pode atualizar seus dados, ou o Admin
+      allow update: if isAuth() && request.auth.uid == usuarioId || isAdmin();
+      // Criar no primeiro login
+      allow create: if isAuth();
+      allow delete: if isAdmin();
+    }
+    
+    match /filtros/{filtroId} {
+      allow read, create, update, delete: if isAuth();
+    }
+    
+    match /estatisticas/{estatId} {
+      allow read, create, update: if isAuth();
+      allow delete: if isAdmin();
+    }
+
+    match /config_selects/{configId} {
+      allow read, create, update, delete: if isAuth();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

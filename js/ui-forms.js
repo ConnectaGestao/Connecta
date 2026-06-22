@@ -243,7 +243,7 @@ function checkSelectNew(id) {
         const wrapMarcacao = document.getElementById('container_data_marcacao');
         const wrapRisco = document.getElementById('container_data_risco');
         if(wrapMarcacao) {
-            if(isCirurgia) wrapMarcacao.classList.remove('hidden'); else { wrapMarcacao.classList.add('hidden'); document.getElementById('field_data_marcacao').value = ''; }
+            wrapMarcacao.classList.remove('hidden');
         }
         if(wrapRisco) {
             if(isCirurgia) wrapRisco.classList.remove('hidden'); else { wrapRisco.classList.add('hidden'); document.getElementById('field_data_risco').value = ''; }
@@ -502,7 +502,6 @@ function resetFormAtendimento(preserveSearch = false) {
     
     const wrapMarcacao = document.getElementById('container_data_marcacao');
     const wrapRisco = document.getElementById('container_data_risco');
-    if(wrapMarcacao) wrapMarcacao.classList.add('hidden');
     if(wrapRisco) wrapRisco.classList.add('hidden');
     
     const dataAb = document.getElementById('data_abertura');
@@ -668,7 +667,7 @@ function abrirEdicaoAtendimento(at) {
     const wrapMarcacao = document.getElementById('container_data_marcacao');
     const wrapRisco = document.getElementById('container_data_risco');
     if(wrapMarcacao) {
-        if(isCirurgia) wrapMarcacao.classList.remove('hidden'); else { wrapMarcacao.classList.add('hidden'); document.getElementById('field_data_marcacao').value = ''; }
+        wrapMarcacao.classList.remove('hidden');
     }
     if(wrapRisco) {
         if(isCirurgia) wrapRisco.classList.remove('hidden'); else { wrapRisco.classList.add('hidden'); document.getElementById('field_data_risco').value = ''; }

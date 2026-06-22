@@ -1684,3 +1684,255 @@ function removerArquivo(index, hiddenInputId, containerId) {
     
     renderizarListaArquivos(atuais, containerId, hiddenInputId);
 }
+
+// Filtro de busca no histórico de atendimentos
+function filtrarHistoricoTimeline(termo) {
+    const container = document.getElementById('hist-timeline-items');
+    if (!container) return;
+    
+    if (!termo || !termo.trim()) {
+        container.innerHTML = window._historicoItemsHtml || '';
+        if(typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+    
+    const t = termo.toLowerCase();
+    const filtrados = (window.historicoAtualCache || []).filter(at => {
+        return [at.tipo_servico, at.especialidade, at.procedimento, at.local, at.status, at.obs_atendimento, at.parceiro, at.tipo, at.data_abertura, at.data_marcacao]
+            .some(v => v && String(v).toLowerCase().includes(t));
+    });
+    
+    if (filtrados.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 italic text-sm pl-2 pt-2">Nenhum resultado para "' + termo + '".</p>';
+        return;
+    }
+    
+    const all = window.historicoAtualCache || [];
+    const marker = 'class="relative pl-4 pb-6 cursor-pointer';
+    const allDivs = (window._historicoItemsHtml || '').split(marker).filter(Boolean);
+    const html = filtrados.map(f => {
+        const i = all.indexOf(f);
+        return i >= 0 && allDivs[i] ? '<div ' + marker + allDivs[i] : '';
+    }).join('');
+    container.innerHTML = html;
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ============================================================================
+// CADASTROS POR DATA
+// ============================================================================
+async function buscarCadastrosPorData(atalho) {
+    const container = document.getElementById('resultado_cadastros_data');
+    const inputData = document.getElementById('filtro_data_cadastro');
+    
+    let dataBusca = '';
+    if (atalho === 'hoje') {
+        dataBusca = new Date().toISOString().split('T')[0];
+        if(inputData) inputData.value = dataBusca;
+    } else if (atalho === 'ontem') {
+        const d = new Date(); d.setDate(d.getDate() - 1);
+        dataBusca = d.toISOString().split('T')[0];
+        if(inputData) inputData.value = dataBusca;
+    } else {
+        dataBusca = inputData ? inputData.value : '';
+    }
+    
+    if (!dataBusca) {
+        container.innerHTML = '<p class="text-amber-600 font-medium">Selecione uma data para buscar.</p>';
+        return;
+    }
+    
+    container.innerHTML = '<p class="text-slate-400 italic text-sm animate-pulse">Buscando...</p>';
+    
+    try {
+        // Use local cache if available
+        let pacientes = typeof todosPacientes !== 'undefined' ? todosPacientes : [];
+        
+        if (pacientes.length === 0) {
+            const snap = await window.getDocs(window.collection(window.db, 'pacientes'));
+            pacientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+        
+        // Filter by data_criacao matching selected date
+        const encontrados = pacientes.filter(p => {
+            if (!p.data_criacao) return false;
+            return p.data_criacao.startsWith(dataBusca);
+        });
+        
+        const dataFmt = dataBusca.split('-').reverse().join('/');
+        
+        if (encontrados.length === 0) {
+            container.innerHTML = `<p class="text-slate-500 italic text-sm">Nenhum cadastro encontrado em <strong>${dataFmt}</strong>.</p>`;
+            return;
+        }
+        window._cadastrosDataAtual = encontrados;
+        
+        let html = `
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-slate-700 dark:text-slate-200 font-bold">${encontrados.length} cadastro(s) em <span class="text-blue-600">${dataFmt}</span></p>
+                <button onclick="imprimirCadastrosPorData('${dataBusca}')" 
+                    class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1 shadow-sm border border-slate-200 dark:border-slate-600">
+                    <i data-lucide="printer" class="w-3 h-3 text-blue-600"></i> Imprimir
+                </button>
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-900 text-xs font-bold text-slate-500 uppercase border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Nome</th>
+                            <th class="px-4 py-3 text-left">CPF</th>
+                            <th class="px-4 py-3 text-left">WhatsApp</th>
+                            <th class="px-4 py-3 text-left">Bairro</th>
+                            <th class="px-4 py-3 text-left">Tipo</th>
+                            <th class="px-4 py-3 text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">`;
+        
+        encontrados.sort((a,b) => (a.nome || '').localeCompare(b.nome || '')).forEach(p => {
+            const cpfFmt = p.cpf ? String(p.cpf).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '-';
+            const tipo = p.pre_cadastro ? '<span class="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Pré Cadastro</span>' : '<span class="bg-blue-50 border border-blue-200 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Completo</span>';
+            const pStr = JSON.stringify(p).replace(/'/g, "\\'");
+            html += `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">${p.nome || '-'}</td>
+                    <td class="px-4 py-3 text-slate-500">${cpfFmt}</td>
+                    <td class="px-4 py-3 text-slate-500">${p.tel1 || p.whatsapp || '-'}</td>
+                    <td class="px-4 py-3 text-slate-500">${p.bairro || '-'}</td>
+                    <td class="px-4 py-3">${tipo}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="verHistoricoCompleto(${pStr.replace(/"/g, '&quot;')})" 
+                            class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-3 py-1.5 rounded-lg font-bold transition flex items-center justify-center mx-auto w-max gap-1.5 text-xs">
+                            <i data-lucide="eye" class="w-3 h-3"></i> Ficha
+                        </button>
+                    </td>
+                </tr>`;
+        });
+        
+        html += '</tbody></table></div>';
+        
+        // Month summary
+        const monthPrefix = dataBusca.substring(0, 7);
+        const monthDaysSet = new Set();
+        pacientes.forEach(p => {
+            if (p.data_criacao && p.data_criacao.startsWith(monthPrefix) && !p.data_criacao.startsWith(dataBusca)) {
+                monthDaysSet.add(p.data_criacao.substring(8, 10));
+            }
+        });
+        const monthDays = Array.from(monthDaysSet).sort((a,b) => parseInt(a) - parseInt(b));
+        if (monthDays.length > 0) {
+            html += `<div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 flex flex-wrap gap-1 items-center">
+                <i data-lucide="info" class="w-3 h-3 inline"></i> <span class="font-bold">Dica:</span> Também houveram cadastros nos dias: 
+                ${monthDays.map(d => `<button onclick="document.getElementById('filtro_data_cadastro').value='${monthPrefix}-${d}'; buscarCadastrosPorData();" class="text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-1.5 py-0.5 rounded transition">${d}</button>`).join('')} 
+                deste mês.
+            </div>`;
+        }
+        
+        container.innerHTML = html;
+        if(typeof lucide !== 'undefined') lucide.createIcons();
+        
+    } catch(e) {
+        console.error(e);
+        container.innerHTML = '<p class="text-red-500 text-sm">Erro ao buscar cadastros. Tente novamente.</p>';
+    }
+}
+
+function imprimirCadastrosPorData(data) {
+    const lista = window._cadastrosDataAtual || [];
+    const dataFmt = data.split('-').reverse().join('/');
+    let rows = lista.map(p => {
+        const cpfFmt = p.cpf ? String(p.cpf).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '-';
+        return `<tr style="border-bottom:1px solid #eee">
+            <td style="padding:6px 8px">${p.nome || '-'}</td>
+            <td style="padding:6px 8px">${cpfFmt}</td>
+            <td style="padding:6px 8px">${p.tel1 || p.whatsapp || '-'}</td>
+            <td style="padding:6px 8px">${p.bairro || '-'}</td>
+            <td style="padding:6px 8px">${p.pre_cadastro ? 'Pré Cadastro' : 'Completo'}</td>
+        </tr>`;
+    }).join('');
+    
+    const w = window.open('', '_blank');
+    w.document.write(`<html><head><title>Cadastros de ${dataFmt}</title>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; margin: 0; padding: 30px; color: #333; }
+            .header { border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .header h1 { font-size: 18px; margin: 0; color: #1e3a8a; text-transform: uppercase; }
+            .header p { margin: 0; font-size: 12px; color: #64748b; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background: #f8fafc; padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1; color: #475569; font-size: 11px; text-transform: uppercase; }
+            td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+            tr:nth-child(even) { background-color: #fcfcfc; }
+            .badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+            .badge-completo { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+            .badge-pre { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        </style>
+        </head><body>
+        <div class="header">
+            <div>
+                <h1>Cadastros Realizados em ${dataFmt}</h1>
+                <p>Relatório gerado pelo sistema Gestão Central</p>
+            </div>
+            <div>
+                <p><strong>Total:</strong> ${lista.length} registro(s)</p>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>Nome do Munícipe</th><th>CPF</th><th>WhatsApp</th><th>Bairro</th><th>Tipo Cadastro</th></tr></thead>
+            <tbody>
+                ${lista.map(p => {
+                    const cpfFmt = p.cpf ? String(p.cpf).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : '-';
+                    const badgeClass = p.pre_cadastro ? 'badge badge-pre' : 'badge badge-completo';
+                    const tipo = p.pre_cadastro ? 'Pré Cadastro' : 'Completo';
+                    return `<tr>
+                        <td style="font-weight: bold;">${p.nome || '-'}</td>
+                        <td>${cpfFmt}</td>
+                        <td>${p.tel1 || p.whatsapp || '-'}</td>
+                        <td>${p.bairro || '-'}</td>
+                        <td><span class="${badgeClass}">${tipo}</span></td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+        <script>window.print();<\/script></body></html>`);
+    w.document.close();
+}
+
+// ============================================================================
+// INICIA FLATPICKR COM DESTAQUE DE DIAS
+// ============================================================================
+setTimeout(() => {
+    if (typeof flatpickr !== 'undefined') {
+        const input = document.getElementById('filtro_data_cadastro');
+        if (input) {
+            input.type = 'text'; // Flatpickr works best on text inputs
+            const fp = flatpickr(input, {
+                locale: 'pt',
+                dateFormat: 'Y-m-d',
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    const date = dayElem.dateObj;
+                    if (!date) return;
+                    const isoDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                    
+                    let pacientes = typeof window.todosPacientes !== 'undefined' ? window.todosPacientes : [];
+                    if (pacientes.length > 0) {
+                        const hasCadastro = pacientes.some(p => p.data_criacao && p.data_criacao.startsWith(isoDate));
+                        if (hasCadastro) {
+                            dayElem.classList.add('has-cadastro');
+                            dayElem.title = 'Há cadastros neste dia';
+                        }
+                    }
+                }
+            });
+            
+            // Pre-load patients to color calendar
+            if (typeof window.todosPacientes === 'undefined' || window.todosPacientes.length === 0) {
+                if (window.db && window.getDocs && window.collection) {
+                    window.getDocs(window.collection(window.db, 'pacientes')).then(snap => {
+                        window.todosPacientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        fp.redraw(); // Redraw calendar to show green dots
+                    }).catch(e => console.error(e));
+                }
+            }
+        }
+    }
+}, 2000);

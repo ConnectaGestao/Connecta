@@ -233,8 +233,10 @@ window.carregarListaAdmin = async function() {
                             <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-200 font-medium uppercase">${item.nome}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
+                                    ${(typeof currentUserRole !== 'undefined' && currentUserRole === 'ADMIN') ? `
                                     <button onclick="abrirModalSubstituirLista('${tipo}', '${item.id}', '${item.nome}')" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1.5 rounded transition" title="Substituir/Mesclar"><i data-lucide="git-merge" class="w-4 h-4"></i></button>
                                     <button onclick="deletarItemLista('${item.id}')" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-1.5 rounded transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    ` : '<span class="text-slate-300 text-xs italic">-</span>'}
                                 </div>
                             </td>
                         </tr>`;
