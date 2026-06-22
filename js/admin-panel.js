@@ -321,6 +321,8 @@ window.abrirModalSubstituirLista = async function(tipo, idAntigo, nomeAntigo) {
         });
     } catch(e) {}
     
+    if (select.tomselect) select.tomselect.sync();
+    
     const m = document.getElementById('modal-substituir-lista');
     m.classList.remove('hidden');
     setTimeout(() => {
@@ -747,4 +749,9 @@ window.atualizarOpcoesSelectAdmin = function() {
     
     sel.innerHTML = html;
     if(chaves.has(currentValue)) sel.value = currentValue;
+    
+    // Sincroniza com o TomSelect se ele estiver ativo
+    if (sel.tomselect) {
+        sel.tomselect.sync();
+    }
 };
