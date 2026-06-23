@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Connecta</title>
     
     <!-- PWA Manifest -->
@@ -101,7 +101,7 @@
         document.write('<link rel="stylesheet" href="css/style.css?v=' + Date.now() + '">');
     </script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans flex text-slate-800 dark:text-slate-100">
+<body class="bg-slate-100 dark:bg-slate-950 min-h-screen font-sans flex flex-col text-slate-800 dark:text-slate-100 overflow-x-hidden w-full max-w-[100vw]">
 
     <!-- TELA DE LOGIN -->
     <div id="view-login" class="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center p-4">
@@ -242,7 +242,7 @@
     </div>
 
     <!-- CONTEÚDO PRINCIPAL -->
-    <main class="flex-1 md:ml-64 p-6 pt-20 md:pt-6 bg-slate-100 dark:bg-slate-950 min-h-screen">
+    <main class="flex-1 min-w-0 w-full md:ml-64 p-3 pt-20 md:p-6 md:pt-6 bg-slate-100 dark:bg-slate-950 min-h-screen">
         <div id="system-message" class="hidden mb-6 p-4 rounded-lg border text-sm break-words shadow-sm"></div>
 
         <!-- DASHBOARD -->
@@ -961,18 +961,20 @@
                             <p class="text-sm text-slate-500 dark:text-slate-400">Altere o nível de acesso das contas que usam o sistema.</p>
                             <button onclick="carregarListaUsuarios()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold rounded-lg transition text-sm">Atualizar</button>
                         </div>
-                        <table class="w-full text-left border-collapse whitespace-nowrap">
-                            <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-[10px] border-b border-slate-200 dark:border-slate-700">
-                                <tr>
-                                    <th class="px-4 py-3">E-mail do Usuário</th>
-                                    <th class="px-4 py-3 text-center">Nível de Acesso</th>
-                                    <th class="px-4 py-3 text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-usuarios-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                                <tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">Carregando usuários...</td></tr>
-                            </tbody>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse whitespace-nowrap">
+                                <thead class="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 uppercase font-bold text-[10px] border-b border-slate-200 dark:border-slate-700">
+                                    <tr>
+                                        <th class="px-4 py-3">E-mail do Usuário</th>
+                                        <th class="px-4 py-3 text-center">Nível de Acesso</th>
+                                        <th class="px-4 py-3 text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-usuarios-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                    <tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">Carregando usuários...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -1756,8 +1758,9 @@
                         </div>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-slate-800 uppercase font-bold text-xs border-b border-slate-200">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600">
+                                <thead class="bg-slate-50 text-slate-800 uppercase font-bold text-xs border-b border-slate-200">
                                 <tr>
                                     <th class="px-4 py-3">Paciente</th>
                                     <th class="px-4 py-3">Campos Problemáticos (Edite e Salve)</th>
@@ -1767,6 +1770,7 @@
                             <tbody id="tabela-auditoria-docs-body" class="divide-y divide-slate-100">
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>
