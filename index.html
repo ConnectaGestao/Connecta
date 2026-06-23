@@ -167,7 +167,10 @@
                     <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Sistema de Gestão</p>
                     <p class="text-[10px] text-slate-500 dark:text-slate-400" id="user-role-display">Carregando...</p>
                 </div>
-                <button onclick="logout()" class="text-xs text-red-400 hover:text-red-300 border border-red-900 bg-red-900/20 px-2 py-1 rounded">Sair</button>
+                <div class="flex gap-2">
+                    <button id="btn-install-pwa" class="hidden text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-900 bg-emerald-900/20 px-2 py-1 rounded" title="Instalar Aplicativo">Instalar App</button>
+                    <button onclick="logout()" class="text-xs text-red-400 hover:text-red-300 border border-red-900 bg-red-900/20 px-2 py-1 rounded">Sair</button>
+                </div>
             </div>
         </div>
 
@@ -232,6 +235,7 @@
             <div class="font-bold flex items-center gap-2 text-blue-400"><i data-lucide="database"></i> Connecta</div>
         </div>
         <div class="flex gap-3 items-center">
+            <button id="btn-install-pwa-mobile" class="hidden text-xs text-emerald-400 border border-emerald-900 px-2 py-1 rounded">Instalar App</button>
             <button onclick="logout()" class="text-xs text-red-400 border border-red-900 px-2 py-1 rounded">Sair</button>
             <button onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('flex');" class="text-white"><i data-lucide="menu"></i></button>
         </div>
@@ -1859,21 +1863,37 @@
             document.write('<script src="' + s + '?v=' + Date.now() + '" charset="UTF-8"><\/script>');
         });
         
-        // PWA Service Worker Registration
+        // PWA Service Worker Registration & Install Prompt
+        let deferredPrompt;
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                        registration.unregister();
-                    }
-                });
-                if (window.caches) {
-                    caches.keys().then(function(names) {
-                        for (let name of names) caches.delete(name);
-                    });
-                }
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registrado!', reg.scope))
+                    .catch(err => console.log('Falha ao registrar Service Worker', err));
             });
         }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Previne o Chrome de exibir o prompt padrão imediatamente
+            e.preventDefault();
+            deferredPrompt = e;
+            // Mostra os botões de instalar
+            const btn1 = document.getElementById('btn-install-pwa');
+            const btn2 = document.getElementById('btn-install-pwa-mobile');
+            if(btn1) btn1.classList.remove('hidden');
+            if(btn2) btn2.classList.remove('hidden');
+
+            const installApp = async () => {
+                if(btn1) btn1.classList.add('hidden');
+                if(btn2) btn2.classList.add('hidden');
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+            };
+
+            if(btn1) btn1.onclick = installApp;
+            if(btn2) btn2.onclick = installApp;
+        });
     </script>
 </body>
 </html>
